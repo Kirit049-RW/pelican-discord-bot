@@ -46,12 +46,12 @@ module.exports = class UserDelete extends SlashCommand {
 
                 ctx.send({ content: `${ctx.emojiSuccess} The user \`${userPelican.attributes.username}\` has been deleted from Pelican!`});
             } catch (err) {
-                ctx.pelican.handlePelicanError(err, '/users/{user}', 'delete');
+                ctx.pelican.handlePelicanError(err, `users/${userPelicanId}`, 'delete');
                 ctx.error(`The user \`${userPelican.attributes.username}\` could not be deleted from Pelican!`);
             }
         } catch (err) {
-            ctx.pelican.handlePelicanError(err, '/users/{user}');
-            ctx.error('An error occurred while trying to get the user from Pelican !');
+            ctx.pelican.handlePelicanError(err, `users/${userPelicanId}`, 'delete');
+            ctx.error('An error occurred while trying to get the user from Pelican!');
         }
     }
 

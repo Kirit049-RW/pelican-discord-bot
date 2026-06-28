@@ -105,7 +105,7 @@ module.exports = class UserUnlink extends SlashCommand {
         const focussedQuery = ctx.options.getFocused();
         if (!focussedQuery) return ctx.inter.respond([{ name: "Write the first letter of the username", value: "nothing_found" }]);
 
-        /* Search for the list of users */
+        /* Search for the list of servers */
         try {
             const usersPelican = await ctx.pelican.requestApplication("users");
 

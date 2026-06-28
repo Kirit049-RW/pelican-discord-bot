@@ -34,7 +34,7 @@ module.exports = class UserList extends SlashCommand {
         const container = new ContainerBuilder()
             .setAccentColor(ctx.me.displayColor)
             .addSectionComponents(s => s
-                .addTextDisplayComponents(t => t.setContent(`### Users account (${usersList.length})`))
+                .addTextDisplayComponents(t => t.setContent(`### 📜 Users account (${usersList.length})`))
                 .addTextDisplayComponents(t => t.setContent(`> Select a user to see more information.`))
                 .setThumbnailAccessory(t => t.setURL(ctx.guild.iconURL() || ctx.me.displayAvatarURL()))
             )
@@ -67,7 +67,7 @@ module.exports = class UserList extends SlashCommand {
         /* Get all users registered in the database & on pelican */
         const usersDatabase = await ctx.database.table('users').select();
 
-        const numberPerPage = 2;
+        const numberPerPage = 10;
         let page = 1;
         let msg;
 
@@ -134,7 +134,7 @@ module.exports = class UserList extends SlashCommand {
                 /* Retrieve the user on pelican */
                 const userPelicanId = button.customId.split('-')[1];
                 const userPelican = usersPelican.find((u) => u.attributes.id === Number(userPelicanId));
-                if (!userPelican) return button.followUp({ content: `${ctx.emojiError} This user does not exist on Pelican !`, flags: MessageFlags.Ephemeral });
+                if (!userPelican) return button.followUp({ content: `${ctx.emojiError} This user does not exist on Pelican!`, flags: MessageFlags.Ephemeral });
 
                 /* Get user server's information */
                 let totalResources = {
@@ -168,9 +168,10 @@ module.exports = class UserList extends SlashCommand {
                 const containerUser = new ContainerBuilder()
                     .setAccentColor(ctx.me.displayColor)
                     .addSectionComponents(s => s
-                        .addTextDisplayComponents(t => t.setContent(`### User account of ${userPelican.attributes.username}`))
+                        .addTextDisplayComponents(t => t.setContent(`### 👤 User account of ${userPelican.attributes.username}`))
                         .setButtonAccessory(buttonReturn)
                     )
+                    .addSeparatorComponents(s => s.setDivider(true).setSpacing(SeparatorSpacingSize.Large))
                     .addTextDisplayComponents(
                         t => t.setContent([
                             "# 👤 Utilisateur",
@@ -186,11 +187,17 @@ module.exports = class UserList extends SlashCommand {
                             `> ⛔ **Suspended servers :** \`${totalResources.suspended}\``,
                             `> 🗄️ **Databases:** \`${totalResources.databases}\``,
                             `> 💾 **Backups:** \`${totalResources.backups}\``,
-                            `> ⚙️ **Total CPU allocated:** \`${totalResources.cpu}%\``,
+                            `> ♾️ **Total CPU allocated:** \`${totalResources.cpu}%\``,
                             `> 🧠 **Total Memory allocated:** \`${ctx.utils.formatMegabytes(totalResources.memory)}\``,
                             `> 💽 **Total Disk allocated:** \`${ctx.utils.formatMegabytes(totalResources.disk)}\``
                         ].join("\n"))
                     )
+                    .addActionRowComponents(r => r.addComponents(
+                        new ButtonBuilder()
+                            .setStyle(5)
+                            .setLabel('View on Pelican')
+                            .setURL(`${ctx.config["pelican"]["url"].endsWith("/") ? ctx.config["pelican"]["url"].slice(0, -1) : ctx.config["pelican"]["url"]}/admin/users/${userPelican.attributes.id}/edit`)
+                    ))
 
                 return msg.edit({
                     components: [containerUser],
@@ -203,7 +210,7 @@ module.exports = class UserList extends SlashCommand {
             });
         } catch (err) {
             ctx.pelican.handlePelicanError(err, '/users');
-            return ctx.error('An error occurred while trying to get the users from Pelican !');
+            return ctx.error('An error occurred while trying to get the users from Pelican!');
         }
     }
 }

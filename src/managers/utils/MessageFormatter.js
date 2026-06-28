@@ -40,6 +40,28 @@ module.exports = class MessageFormatter {
         return this.custom(message, this.client.emojiError)
     }
 
+    /**
+     * Get components to display question
+     * @return {[{components: [{emoji, custom_id, style: number, type: number},{emoji, custom_id, style: number, type: number}], type: number}]}
+     */
+    question () {
+        return [{
+            type: 1,
+            components: [{
+                custom_id: "yes",
+                style: 2,
+                emoji: this.client.emojiSuccess,
+                type: 2
+            },
+                {
+                    custom_id: "no",
+                    style: 2,
+                    emoji: this.client.emojiError,
+                    type: 2
+                }]
+        }]
+    }
+
      /**
      * Get components to display pages
      * @param {string} label The label for middle page
