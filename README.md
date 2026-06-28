@@ -64,6 +64,11 @@ Go to the Discord Developer Portal and create a new application:
 > 🚨 **IMPORTANT**  
 > If you don't add a profile picture to your bot, some commands will not work correctly.
 
+> 🚨 **IMPORTANT 2**  
+> You need to add the following Intents to your bot:
+>- Presence Intent
+> - Server Members Intent
+
 ### 2. Config file
 Rename config.example.json to config.json
 
