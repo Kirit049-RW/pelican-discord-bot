@@ -17,6 +17,10 @@ module.exports = class Event {
         return this.client.database;
     }
 
+    get pelican () {
+        return this.client.pelicanHandler;
+    }
+
     get config () {
         return this.client.config;
     }
