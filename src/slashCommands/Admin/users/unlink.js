@@ -66,7 +66,7 @@ module.exports = class UserUnlink extends SlashCommand {
             if (!userDiscordExist[0]) return ctx.error('This Discord user is not linked to a pelican user!');
 
             /* Retrieve pelican user information */
-            const userPelican = await ctx.pelican.requestApplication(`users/${userPelicanId}`).catch(() => null);
+            const userPelican = await ctx.pelican.requestApplication(`users/${userPelicanId}`).catch((err) => ctx.pelican.handlePelicanError(err, `users/${userPelicanId}`));
 
             /* Delete it in the database */
             await ctx.database.table('users').delete().where('discordId', userDiscord.id);
@@ -85,7 +85,7 @@ module.exports = class UserUnlink extends SlashCommand {
             if (!userPelicanExist[0]) return ctx.error('This pelican user is not linked to a Discord user!');
 
             /* Retrieve pelican user information */
-            const userPelican = await ctx.pelican.requestApplication(`users/${userPelicanId}`).catch(() => null);
+            const userPelican = await ctx.pelican.requestApplication(`users/${userPelicanId}`).catch((err) => ctx.pelican.handlePelicanError(err, `users/${userPelicanId}`));
 
             /* Retrieve Discord user information */
             const userDiscord = await ctx.client.users.fetch(userPelicanExist[0].discordId).catch(() => null);
