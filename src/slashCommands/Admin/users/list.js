@@ -1,13 +1,13 @@
 const SlashCommand = require('../../../managers/structures/SlashCommands.js');
-const { MessageFlags, ContainerBuilder, SeparatorSpacingSize, StringSelectMenuBuilder, ButtonBuilder } = require('discord.js');
+const { MessageFlags, ContainerBuilder, SeparatorSpacingSize, ButtonBuilder } = require('discord.js');
 
 module.exports = class UserList extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'user-list',
-            description: 'Get all users registered on the pelican panel',
+            description: 'Get all users from the pelican panel',
             description_localizations: {
-                "fr": "Afficher tous les utilisateurs enregistrés sur le panel pelican"
+                "fr": "Afficher tous les utilisateurs du panel pelican"
             },
             category: SlashCommand.Categories.UserPelican,
             user_permissions: ['Administrator'],
@@ -21,20 +21,21 @@ module.exports = class UserList extends SlashCommand {
      * @param usersDatabase The users database
      * @param page The page
      * @param usersList The user's list
+     * @param totalUsers The total number of users
      * @returns {ContainerBuilder}
      */
-    displayContainer(ctx, usersDatabase, page, usersList) {
+    displayContainer(ctx, usersDatabase, page, usersList, totalUsers) {
         /* Check if we have the discord user registered */
         const linkUsersToDiscord = usersList.map((user) => {
             const exist = usersDatabase.find((u) => u.userPelicanId === user.attributes.id)
-            if (exist) return `<@${exist.discordId}>`
+            if (exist) return `<@${exist.discordId}> (\`${exist.discordId}\`)`
             else return '\`None\`'
         });
 
         const container = new ContainerBuilder()
             .setAccentColor(ctx.me.displayColor)
             .addSectionComponents(s => s
-                .addTextDisplayComponents(t => t.setContent(`### 📜 Users account (${usersList.length})`))
+                .addTextDisplayComponents(t => t.setContent(`# 📜 Users account (${totalUsers})`))
                 .addTextDisplayComponents(t => t.setContent(`> Select a user to see more information.`))
                 .setThumbnailAccessory(t => t.setURL(ctx.guild.iconURL() || ctx.me.displayAvatarURL()))
             )
@@ -48,8 +49,8 @@ module.exports = class UserList extends SlashCommand {
                             t.setContent(
                                 [
                                     `## 👤 ${this.utils.capitalize(user.attributes.username)}`,
-                                    `> **Discord:** ${linkUsersToDiscord[i] ?? "Not linked"}`,
-                                    `> **Administrator:** ${user.attributes.root_admin ? ctx.emojiSuccess : ctx.emojiError}`
+                                    `> **Discord:** ${linkUsersToDiscord[i]}`,
+                                    `> **Administrator:** ${user.attributes.root_admin ? `\`${ctx.emojiSuccess}\`` : `\`${ctx.emojiError}\``}`
                                 ].join("\n")
                             )
                         )
@@ -67,7 +68,7 @@ module.exports = class UserList extends SlashCommand {
         /* Get all users registered in the database & on pelican */
         const usersDatabase = await ctx.database.table('users').select();
 
-        const numberPerPage = 10;
+        const numberPerPage = 5;
         let page = 1;
         let msg;
 
@@ -80,12 +81,13 @@ module.exports = class UserList extends SlashCommand {
             let usersList = ctx.utils.getNumberPacket(usersPelican, numberPerPage);
             const filter = (button) => button.user.id === ctx.user.id;
 
-            let container = this.displayContainer(ctx, usersDatabase, page, usersList[page-1]);
+            let container = this.displayContainer(ctx, usersDatabase, page, usersList[page-1], usersPelican.length);
 
             if (usersList.length === 1) {
                 msg = await ctx.send({
                     components: [container],
-                    flags: MessageFlags.IsComponentsV2
+                    flags: MessageFlags.IsComponentsV2,
+                    allowedMentions: { parse: [] }
                 });
             }
             else {
@@ -97,7 +99,8 @@ module.exports = class UserList extends SlashCommand {
 
                 msg = await ctx.send({
                     components: [container],
-                    flags: MessageFlags.IsComponentsV2
+                    flags: MessageFlags.IsComponentsV2,
+                    allowedMentions: { parse: [] }
                 });
 
                 const collector = msg.createMessageComponentCollector({ filter, idle: 5 * 60 * 1000, componentType: 2 });
@@ -110,7 +113,7 @@ module.exports = class UserList extends SlashCommand {
                     const componentPage = ctx.messageFormatter.pages(`Page ${page}/${usersList.length}`, page, usersList.length);
 
                     // Delete the component at setId 2 to avoid duplicates
-                    container = this.displayContainer(ctx, usersDatabase, page, usersList[page-1]);
+                    container = this.displayContainer(ctx, usersDatabase, page, usersList[page-1], usersPelican.length);
 
                     container
                         .addSeparatorComponents(s => s.setDivider(true).setSpacing(SeparatorSpacingSize.Large))
@@ -118,7 +121,7 @@ module.exports = class UserList extends SlashCommand {
 
                     msg = await msg.edit({
                         components: [container],
-                        flags: MessageFlags.IsComponentsV2
+                        allowedMentions: { parse: [] }
                     }).catch(() => null);
                 });
             }
@@ -129,7 +132,7 @@ module.exports = class UserList extends SlashCommand {
                 if (!button.customId.startsWith('user-') && button.customId !== 'user-list') return;
                 await button.deferUpdate();
 
-                if (button.customId === 'user-list') return msg.edit({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => null);
+                if (button.customId === 'user-list') return msg.edit({ components: [container], allowedMentions: { parse: [] } }).catch(() => null);
 
                 /* Retrieve the user on pelican */
                 const userPelicanId = button.customId.split('-')[1];
@@ -156,7 +159,7 @@ module.exports = class UserList extends SlashCommand {
                 }
 
                 /* Get the discord user registered */
-                let discordInfo = usersDatabase.find((u) => u.pterodactylId === userPelican.attributes.id);
+                let discordInfo = usersDatabase.find((u) => u.userPelicanId === userPelican.attributes.id);
                 discordInfo = discordInfo ? `<@${discordInfo.discordId}> (\`${discordInfo.discordId}\`)` : '\`Not linked\`';
 
                 const buttonReturn = new ButtonBuilder()
@@ -168,20 +171,21 @@ module.exports = class UserList extends SlashCommand {
                 const containerUser = new ContainerBuilder()
                     .setAccentColor(ctx.me.displayColor)
                     .addSectionComponents(s => s
-                        .addTextDisplayComponents(t => t.setContent(`### 👤 User account of ${userPelican.attributes.username}`))
+                        .addTextDisplayComponents(t => t.setContent(`# 👤 User account of ${userPelican.attributes.username}`))
                         .setButtonAccessory(buttonReturn)
                     )
                     .addSeparatorComponents(s => s.setDivider(true).setSpacing(SeparatorSpacingSize.Large))
                     .addTextDisplayComponents(
                         t => t.setContent([
-                            "# 👤 Utilisateur",
+                            "## 👤 User details",
                             `> 🪪 **Username:** ${this.utils.capitalize(userPelican.attributes.username)}`,
                             `> 🆔 **ID:** \`${userPelican.attributes.id}\``,
+                            `> 📅 **Created at:** <t:${Math.round(new Date(userPelican.attributes.created_at).getTime()/ 1000).toFixed()}:d>`,
                             `> 💬 **Discord:** ${discordInfo}`,
-                            `> 🛡️ **Administrator:** ${userPelican.attributes.root_admin ? ctx.emojiSuccess : ctx.emojiError}`
+                            `> 🛡️ **Administrator:** ${userPelican.attributes.root_admin ? `\`${ctx.emojiSuccess}\`` : `\`${ctx.emojiError}\``}`
                         ].join("\n")),
                         t => t.setContent([
-                            "# 🖥️ Servers",
+                            "## 🖥️ Servers",
                             "",
                             `> 📦 **Total servers:** \`${userPelican.attributes.relationships.servers.data.length}\``,
                             `> ⛔ **Suspended servers :** \`${totalResources.suspended}\``,
@@ -192,6 +196,7 @@ module.exports = class UserList extends SlashCommand {
                             `> 💽 **Total Disk allocated:** \`${ctx.utils.formatMegabytes(totalResources.disk)}\``
                         ].join("\n"))
                     )
+                    .addSeparatorComponents(s => s.setDivider(true).setSpacing(SeparatorSpacingSize.Large))
                     .addActionRowComponents(r => r.addComponents(
                         new ButtonBuilder()
                             .setStyle(5)
@@ -201,12 +206,12 @@ module.exports = class UserList extends SlashCommand {
 
                 return msg.edit({
                     components: [containerUser],
-                    flags: MessageFlags.IsComponentsV2
+                    allowedMentions: { parse: [] }
                 }).catch(() => null);
             });
 
             collectorButton.on('end', (_, reason) => {
-                if (reason === 'idle') return msg.edit({ components: ctx.messageFormatter.disableButtons(msg.components, true) }).catch(() => null);
+                if (reason === 'idle') return msg.edit({ components: ctx.messageFormatter.disableButtons(msg.components, true), allowedMentions: { parse: [] } }).catch(() => null);
             });
         } catch (err) {
             ctx.pelican.handlePelicanError(err, '/users');

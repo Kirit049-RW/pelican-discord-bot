@@ -1,0 +1,275 @@
+const SlashCommand = require('../../../managers/structures/SlashCommands.js');
+const { MessageFlags, ContainerBuilder, SeparatorSpacingSize, ButtonBuilder, EmbedBuilder } = require('discord.js');
+
+module.exports = class ServerList extends SlashCommand {
+    constructor(handler) {
+        super(handler,{
+            name: 'server-list',
+            description: 'Get all servers from the pelican panel',
+            description_localizations: {
+                "fr": "Afficher tous les serveurs du le panel pelican"
+            },
+            category: SlashCommand.Categories.ServerPelican,
+            user_permissions: ['Administrator'],
+            bot_permissions: ['EmbedLinks']
+        });
+    }
+
+    /**
+     * Display the container to choose a user
+     * @param ctx The command context
+     * @param usersDatabase The users database
+     * @param page The page
+     * @param serversList The server's list
+     * @param totalServers The total number of servers
+     * @returns {ContainerBuilder}
+     */
+    displayContainer(ctx, usersDatabase, page, serversList, totalServers) {
+        /* Check if we have the discord user registered */
+        const linkUsersToDiscord = serversList.map((server) => {
+            const exist = usersDatabase.find((u) => u.userPelicanId === server.attributes.relationships.user.attributes.id)
+            if (exist) return `<@${exist.discordId}> (\`${exist.discordId}\`)`
+            else return '\`Not linked\`'
+        });
+
+        const container = new ContainerBuilder()
+            .setAccentColor(ctx.me.displayColor)
+            .addSectionComponents(s => s
+                .addTextDisplayComponents(t => t.setContent(`# 📜 Servers (${totalServers})`))
+                .addTextDisplayComponents(t => t.setContent(`> Select a server to see more information.`))
+                .setThumbnailAccessory(t => t.setURL(ctx.guild.iconURL() || ctx.me.displayAvatarURL()))
+            )
+
+            for (let i = 0; i < serversList.length; i++) {
+                const server = serversList[i];
+
+                container .addSeparatorComponents(s => s.setDivider(true).setSpacing(SeparatorSpacingSize.Small))
+                    .addSectionComponents(s => s
+                        .addTextDisplayComponents(t =>
+                            t.setContent(
+                                [
+                                    `## ✳️ ${server.attributes.name}`,
+                                    `> **Description:** ${server.attributes.description || '\`None\`' }`,
+                                    `> **Owner:** ${this.utils.capitalize(server.attributes.relationships.user.attributes.username)}`,
+                                    `> **Discord:** ${linkUsersToDiscord[i]}`
+                                ].join("\n")
+                            )
+                        )
+                        .setButtonAccessory(new ButtonBuilder()
+                            .setCustomId(`server-${server.attributes.id}`)
+                            .setStyle(2)
+                            .setEmoji('ℹ️'))
+                    )
+            }
+
+        return container;
+    }
+
+    /**
+     * Display the server information
+     * @param ctx The command context
+     * @param discordInfo The discord user linked to the server
+     * @param server The server
+     * @param reinstall If the server is being reinstalled
+     * @return {Promise<ContainerBuilder>}
+     */
+    async displayServer(ctx, discordInfo, server, reinstall = false) {
+        /* Retrieve the node from Pelican */
+        const nodePelican = await ctx.pelican.requestApplication(`nodes/${server.attributes.node}`).catch((err) => ctx.pelican.handlePelicanError(err, `nodes/${server.attributes.node}`));
+
+        /* Retrieve the egg from Pelican */
+        const eggPelican = await ctx.pelican.requestApplication(`eggs/${server.attributes.egg}`).catch((err) => ctx.pelican.handlePelicanError(err, `eggs/${server.attributes.egg}`));
+
+        const buttonReturn = new ButtonBuilder()
+            .setCustomId('server-list')
+            .setLabel('Return')
+            .setStyle(2)
+            .setEmoji('⬅️')
+
+        const userPelican = server.attributes.relationships.user;
+
+        return new ContainerBuilder()
+            .setAccentColor(ctx.me.displayColor)
+            .addSectionComponents(s => s
+                .addTextDisplayComponents(t => t.setContent(`# ✳️ Server ${server.attributes.name}`))
+                .setButtonAccessory(buttonReturn)
+            )
+            .addSeparatorComponents(s => s.setDivider(true).setSpacing(SeparatorSpacingSize.Large))
+            .addTextDisplayComponents(
+                t => t.setContent([
+                    "## 👤 Server details",
+                    `> ✏️ **Name:** ${server.attributes.name}`,
+                    `> 💬 **Description:** ${server.attributes.description ? server.attributes.description : '\`-\`'}`,
+                    `> 🆔 **ID:** \`${server.attributes.id}\``,
+                    `> 📅 **Created at:** <t:${Math.round(new Date(server.attributes.created_at).getTime() / 1000).toFixed()}:d>`,
+                    `> ⛔ **Suspended :** \`${server.attributes.suspended ? ctx.emojiSuccess : ctx.emojiError}\``,
+                    `> 🪪 **Owner:** ${this.utils.capitalize(userPelican.attributes.username)}`,
+                    `> 💬 **Discord:** ${discordInfo}`
+                ].join("\n")),
+                t => t.setContent(
+                    [
+                        "## ✳️ Server features",
+                        `> 📟 **Node:** ${nodePelican ? nodePelican.attributes.name : `\`${server.attributes.node}\` (Not found)`}`,
+                        `> 🥚 **Egg** ${eggPelican ? eggPelican.attributes.name : `\`${server.attributes.egg}\` (Not found)`}`,
+                        `> 🗄️ **Database:** \`${server.attributes.feature_limits.databases === 0 ? '-' : server.attributes.feature_limits.databases}\``,
+                        `> 💾 **Backup:** \`${server.attributes.feature_limits.backups === 0 ? '-' : server.attributes.feature_limits.backups}\``,
+                        `> 🌐 **Allocation:** \`${server.attributes.feature_limits.allocations === 0 ? '-' : server.attributes.feature_limits.allocations}\``
+                    ].join("\n")),
+                t => t.setContent(
+                    [
+                        "## ⚙️ Server limits",
+                        `> ♾️ **CPU:** \`${server.attributes.limits.cpu}%\``,
+                        `> 🧠 **Memory:** \`${ctx.utils.formatMegabytes(server.attributes.limits.memory)}\``,
+                        `> 💽 **Disk** \`${ctx.utils.formatMegabytes(server.attributes.limits.disk)}\``
+                    ].join("\n"))
+            )
+            .addSeparatorComponents(s => s.setDivider(true).setSpacing(SeparatorSpacingSize.Large))
+            .addActionRowComponents(r => r.addComponents(
+                new ButtonBuilder()
+                    .setStyle(5)
+                    .setLabel('View on Pelican')
+                    .setURL(`${ctx.config["pelican"]["url"].endsWith("/") ? ctx.config["pelican"]["url"].slice(0, -1) : ctx.config["pelican"]["url"]}/admin/servers/${server.attributes.id}/edit`),
+                new ButtonBuilder()
+                    .setCustomId(`reinstall-${server.attributes.id}`)
+                    .setLabel('Reinstall')
+                    .setEmoji('🔄')
+                    .setStyle(4)
+                    .setDisabled(reinstall)
+            ));
+    }
+
+    async run (ctx) {
+        /* Get all users registered in the database & on pelican */
+        const usersDatabase = await ctx.database.table('users').select();
+
+        const numberPerPage = 5;
+        let page = 1;
+        let msg;
+
+        try {
+            const serversPelican = await ctx.pelican.requestApplication("servers?include=user");
+
+            /* Check if there is at least one user */
+            if (!serversPelican[0]) return ctx.error('No server found on Pelican!');
+
+            let serversList = ctx.utils.getNumberPacket(serversPelican, numberPerPage);
+            const filter = (button) => button.user.id === ctx.user.id;
+
+            let container = this.displayContainer(ctx, usersDatabase, page, serversList[page-1], serversPelican.length);
+
+            if (serversList.length === 1) {
+                msg = await ctx.send({
+                    components: [container],
+                    flags: MessageFlags.IsComponentsV2,
+                    allowedMentions: { parse: [] }
+                });
+            }
+            else {
+                const componentPage = ctx.messageFormatter.pages(`Page ${page}/${serversList.length}`, page, serversList.length);
+
+                container
+                    .addSeparatorComponents(s => s.setDivider(true).setSpacing(SeparatorSpacingSize.Large))
+                    .addActionRowComponents(a => a.setComponents(componentPage[0].components))
+
+                msg = await ctx.send({
+                    components: [container],
+                    flags: MessageFlags.IsComponentsV2,
+                    allowedMentions: { parse: [] }
+                });
+
+                const collector = msg.createMessageComponentCollector({ filter, idle: 5 * 60 * 1000, componentType: 2 });
+                collector.on('collect', async (button) => {
+                    if (!["left", "right"].includes(button.customId)) return
+                    await button.deferUpdate();
+
+                    button.customId === 'left' ? page-- : page++;
+
+                    const componentPage = ctx.messageFormatter.pages(`Page ${page}/${serversList.length}`, page, serversList.length);
+
+                    // Delete the component at setId 2 to avoid duplicates
+                    container = this.displayContainer(ctx, usersDatabase, page, serversList[page-1], serversPelican.length);
+
+                    container
+                        .addSeparatorComponents(s => s.setDivider(true).setSpacing(SeparatorSpacingSize.Large))
+                        .addActionRowComponents(a => a.setComponents(componentPage[0].components))
+
+                    msg = await msg.edit({
+                        components: [container],
+                        allowedMentions: { parse: [] }
+                    }).catch(() => null);
+                });
+            }
+
+            const collectorButton = msg.createMessageComponentCollector({ filter, idle: 5 * 60 * 1000, componentType: 2});
+
+            collectorButton.on('collect', async (button) => {
+                if (!button.customId.startsWith('server-') && button.customId !== 'server-list' && !button.customId.startsWith('reinstall-')) return;
+                await button.deferUpdate();
+
+                if (button.customId === 'server-list') return msg.edit({ components: [container], allowedMentions: { parse: [] } }).catch(() => null);
+
+                /* Retrieve the user on pelican */
+                const serverPelicanId = button.customId.split('-')[1];
+                const serverPelican = serversPelican.find((s) => s.attributes.id === Number(serverPelicanId));
+                if (!serverPelican) return button.followUp({ content: `${ctx.emojiError} This server does not exist on Pelican!`, flags: MessageFlags.Ephemeral });
+
+                /* Get the discord user registered */
+                let discordInfo = usersDatabase.find((u) => u.userPelicanId === serverPelican.attributes.relationships.user.attributes.id);
+                discordInfo = discordInfo ? `<@${discordInfo.discordId}> (\`${discordInfo.discordId}\`)` : '\`Not linked\`';
+
+                if (button.customId.startsWith('reinstall-')) {
+                    // Disable buttons
+                    await button.message.edit({
+                        components: ctx.messageFormatter.disableButtons(button.message.components, true),
+                        allowedMentions: { parse: [] }
+                    }).catch(() => null);
+
+                    /* Ask for confirmation */
+                    const embedAsk = new EmbedBuilder()
+                        .setDescription(`**Are you sure you want to reinstall the server \`${serverPelican.attributes.name}\`?**`)
+                        .setColor(ctx.me.displayColor)
+
+                    const msgAsk = await ctx.send({
+                        embeds: [embedAsk],
+                        components: ctx.messageFormatter.question()
+                    });
+
+                    const collectorAsk = msgAsk.createMessageComponentCollector({ filter, idle: 5 * 60 * 1000, componentType: 2, max: 1 });
+                    collectorAsk.on('collect', async (buttonConfirm) => {
+                        await buttonConfirm.deferUpdate();
+                        msgAsk.delete().catch(() => null);
+                        collectorAsk.stop();
+
+                        // If the user cancels the confirmation
+                        if (buttonConfirm.customId !== 'yes') return button.message.edit({
+                            components: [await this.displayServer(ctx, discordInfo, serverPelican)],
+                            allowedMentions: { parse: [] }
+                        }).catch(() => null);
+
+                        await ctx.pelican.requestApplication(`servers/${serverPelicanId}/reinstall`, 'post').catch((err) => ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}/reinstall`));
+
+                        button.message.edit({
+                            components: [await this.displayServer(ctx, discordInfo, serverPelican, true)],
+                            allowedMentions: { parse: [] }
+                        }).catch(() => null);
+
+                        return button.followUp({ content: `${ctx.emojiSuccess} The server is being reinstalled!` });
+                    });
+                }
+                else {
+                    return msg.edit({
+                        components: [await this.displayServer(ctx, discordInfo, serverPelican)],
+                        allowedMentions: { parse: [] }
+                    }).catch(() => null);
+                }
+            });
+
+            collectorButton.on('end', (_, reason) => {
+                if (reason === 'idle') return msg.edit({ components: ctx.messageFormatter.disableButtons(msg.components, true), allowedMentions: { parse: [] } }).catch(() => null);
+            });
+        } catch (err) {
+            ctx.pelican.handlePelicanError(err, `servers`);
+            return ctx.error('An error occurred while trying to get the servers from Pelican!');
+        }
+    }
+}

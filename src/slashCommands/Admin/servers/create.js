@@ -117,7 +117,7 @@ module.exports = class ServerCreate extends SlashCommand {
                         `> 🥚 **Egg** ${data.eggData.attributes.name}`,
                         `> 🗄️ **Database:** \`${data.database === 0 ? '-' : data.database}\``,
                         `> 💾 **Backup:** \`${data.backup === 0 ? '-' : data.backup}\``,
-                        `> 🌐 **Allocation:** \`${data.allocation}\``
+                        `> 🌐 **Allocation:** \`${data.allocation === 0 ? '-' : data.allocation}\``
                     ].join('\n')
                 ))
                 .setButtonAccessory(
@@ -190,7 +190,7 @@ module.exports = class ServerCreate extends SlashCommand {
             memory: 0,
             disk: 0,
             cpu: 0,
-            allocation: 1
+            allocation: 0
         }
 
         /* Check if the time is correct */
@@ -219,7 +219,8 @@ module.exports = class ServerCreate extends SlashCommand {
 
         const msg = await ctx.send({
             components: [this.displayMainComponents(ctx, data, userDiscord)],
-            flags: MessageFlags.IsComponentsV2
+            flags: MessageFlags.IsComponentsV2,
+            allowedMentions: { parse: [] }
         });
 
         const filter = (button) => button.user.id === ctx.user.id;
@@ -262,7 +263,8 @@ module.exports = class ServerCreate extends SlashCommand {
 
                         // Update the message
                         return button.message.edit({
-                            components: [this.displayMainComponents(ctx, data, userDiscord)]
+                            components: [this.displayMainComponents(ctx, data, userDiscord)],
+                            allowedMentions: { parse: [] }
                         }).catch(() => null);
                     });
 
@@ -346,7 +348,8 @@ module.exports = class ServerCreate extends SlashCommand {
 
                         // Update the message
                         return button.message.edit({
-                            components: [this.displayMainComponents(ctx, data, userDiscord)]
+                            components: [this.displayMainComponents(ctx, data, userDiscord)],
+                            allowedMentions: { parse: [] }
                         }).catch(() => null);
                     });
 
@@ -434,7 +437,8 @@ module.exports = class ServerCreate extends SlashCommand {
 
                         // Update the message
                         return button.message.edit({
-                            components: [this.displayMainComponents(ctx, data, userDiscord)]
+                            components: [this.displayMainComponents(ctx, data, userDiscord)],
+                            allowedMentions: { parse: [] }
                         }).catch(() => null);
                     });
 
@@ -444,7 +448,8 @@ module.exports = class ServerCreate extends SlashCommand {
 
                 // Disable buttons
                 await button.message.edit({
-                    components: ctx.messageFormatter.disableButtons(button.message.components, true)
+                    components: ctx.messageFormatter.disableButtons(button.message.components, true),
+                    allowedMentions: { parse: [] }
                 }).catch(() => null);
 
                 // Ask for confirmation
@@ -465,7 +470,8 @@ module.exports = class ServerCreate extends SlashCommand {
 
                     // If the user cancels the confirmation
                     if (buttonConfirm.customId !== 'yes') return button.message.edit({
-                        components: [this.displayMainComponents(ctx, data, userDiscord)]
+                        components: [this.displayMainComponents(ctx, data, userDiscord)],
+                        allowedMentions: { parse: [] }
                     }).catch(() => null);
 
                     /* Get all allocations */
@@ -473,6 +479,9 @@ module.exports = class ServerCreate extends SlashCommand {
 
                     /* Get free allocations */
                     let freeAllocations = allocations.filter(a => !a.attributes.assigned);
+
+                    /* Add the default allocation */
+                    data.allocation = data.allocation + 1
 
                     /* Create missing allocations */
                     if (freeAllocations.length < data.allocation) {
@@ -535,7 +544,7 @@ module.exports = class ServerCreate extends SlashCommand {
                                 },
                                 feature_limits: {
                                     databases: data.database,
-                                    allocations: data.allocation,
+                                    allocations: data.allocation - 1,
                                     backups: data.backup
                                 },
                                 allocation: {
@@ -547,7 +556,7 @@ module.exports = class ServerCreate extends SlashCommand {
 
                         await button.message.edit({
                             components: [this.displayCreationComponents(ctx, false, server)],
-                            flags: MessageFlags.IsComponentsV2
+                            allowedMentions: { parse: [] }
                         });
 
                         /* Waiting for the server to be created */
@@ -561,7 +570,7 @@ module.exports = class ServerCreate extends SlashCommand {
 
                         await button.message.edit({
                             components: [this.displayCreationComponents(ctx, true, server)],
-                            flags: MessageFlags.IsComponentsV2
+                            allowedMentions: { parse: [] }
                         });
 
                         if (time) {
@@ -625,7 +634,7 @@ module.exports = class ServerCreate extends SlashCommand {
         });
 
         collectorButton.on('end', (_, reason) => {
-            if (reason === 'idle') return msg.edit({ components: ctx.messageFormatter.disableButtons(msg.components, true) }).catch(() => null);
+            if (reason === 'idle') return msg.edit({ components: ctx.messageFormatter.disableButtons(msg.components, true), allowedMentions: { parse: [] } }).catch(() => null);
         });
     }
 
