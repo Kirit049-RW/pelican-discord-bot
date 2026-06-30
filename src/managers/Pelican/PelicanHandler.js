@@ -12,6 +12,33 @@ module.exports = class PelicanHandler {
     }
 
     /**
+     * Validate the Pelican URL by making a request to the root endpoint and checking the response.
+     * @return {Promise<boolean>}
+     */
+    async validateUrl() {
+        try {
+            const response = await axios.get(this.domain, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                timeout: 5000,
+                validateStatus: () => true
+            });
+
+            if ([200, 401, 403].includes(response.status)) {
+                return true;
+            }
+
+            this.logger.pelican(`⚠️ Received unexpected response from Pelican application: ${response.status} ${response.statusText}`);
+            return false;
+        } catch (error) {
+            this.logger.pelican(`⚠️ Failed to connect to Pelican application at ${this.domain}: ${error.message}`);
+            return false;
+        }
+    }
+
+    /**
      * Make a request to the Pelican application API.
      * @param endpoint - The endpoint to request.
      * @param method - The HTTP method to use (default: 'get').
@@ -19,6 +46,10 @@ module.exports = class PelicanHandler {
      * @return {Promise<any>}
      */
     async requestApplication(endpoint, method = 'get', data = null) {
+        /* Check if the URL is valid */
+        const isValidUrl = await this.validateUrl();
+        if (!isValidUrl) throw new PelicanAPIError({ message: "The URL provided is not valid!" }, data, method);
+
         try {
             const response = await axios({
                 method: method,
@@ -51,6 +82,10 @@ module.exports = class PelicanHandler {
      * @return {Promise<any>}
      */
     async requestClient(endpoint, method = 'get', data = null) {
+        /* Check if the URL is valid */
+        const isValidUrl = await this.validateUrl();
+        if (!isValidUrl) throw new Error("The URL provided is not valid!");
+
         try {
             const response = await axios({
                 method: method,

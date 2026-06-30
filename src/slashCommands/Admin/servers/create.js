@@ -190,7 +190,7 @@ module.exports = class ServerCreate extends SlashCommand {
             memory: 0,
             disk: 0,
             cpu: 0,
-            allocation: 0
+            allocation: 1
         }
 
         /* Check if the time is correct */
@@ -201,7 +201,7 @@ module.exports = class ServerCreate extends SlashCommand {
         if (!userPelican) return ctx.error('This user does not exist!');
 
         /* Retrieve the node from Pelican */
-        const nodePelican = await ctx.pelican.requestApplication(`nodes/${data.node}`).catch((err) => ctx.pelican.handlePelicanError(err, `nodes/${data.node}`));
+        const nodePelican = await ctx.pelican.requestApplication(`nodes/${data.node}?include=allocations`).catch((err) => ctx.pelican.handlePelicanError(err, `nodes/${data.node}`));
         if (!nodePelican) return ctx.error('This node does not exist!');
 
         /* Retrieve the egg from Pelican */
@@ -267,7 +267,6 @@ module.exports = class ServerCreate extends SlashCommand {
                             allowedMentions: { parse: [] }
                         }).catch(() => null);
                     });
-
             }
             else if (button.customId === 'button_server_features') {
                 const date = Date.now();
@@ -480,9 +479,6 @@ module.exports = class ServerCreate extends SlashCommand {
                     /* Get free allocations */
                     let freeAllocations = allocations.filter(a => !a.attributes.assigned);
 
-                    /* Add the default allocation */
-                    data.allocation = data.allocation + 1
-
                     /* Create missing allocations */
                     if (freeAllocations.length < data.allocation) {
                         const missing = data.allocation - freeAllocations.length;
@@ -499,7 +495,7 @@ module.exports = class ServerCreate extends SlashCommand {
                                 `nodes/${data.node}/allocations`,
                                 'post',
                                 {
-                                    ip: ctx.config['pelican']['ip'],
+                                    ip: data.nodeData.attributes.relationships.allocations.data[0].attributes.ip,
                                     ports: [`${biggestPort}`],
                                 }
                             ).catch((err) => {
@@ -516,7 +512,6 @@ module.exports = class ServerCreate extends SlashCommand {
 
                     /* Keep the allocations that will be assigned to the server */
                     const serverAllocations = freeAllocations.slice(0, data.allocation).map(a => a.attributes.id);
-
 
                     /* Create the server */
                     try {
@@ -544,7 +539,7 @@ module.exports = class ServerCreate extends SlashCommand {
                                 },
                                 feature_limits: {
                                     databases: data.database,
-                                    allocations: data.allocation - 1,
+                                    allocations: data.allocation,
                                     backups: data.backup
                                 },
                                 allocation: {

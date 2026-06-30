@@ -95,7 +95,6 @@ Rename config.example.json to config.json
     "roleId": "Role to ping when the bot is down"
   },
   "pterodactyl": {
-    "ip": "Ip of allocations to create : 25.14.36.251",
     "url": "URL of the panel : https://panel.xxx.com",
     "apiKeyApp": "App API key on pterodactyl : ptla_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     "mailSetup": "If the mail system is enabled on the panel : true or false",

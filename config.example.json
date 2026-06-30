@@ -20,7 +20,6 @@
         "roleId": ""
     },
     "pelican": {
-        "ip": "25.14.36.251",
         "url": "https://panel.xxx.com",
         "apiKeyApp": "ptla_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
         "mailSetup": false,
