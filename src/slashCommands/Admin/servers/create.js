@@ -201,11 +201,11 @@ module.exports = class ServerCreate extends SlashCommand {
         if (!userPelican) return ctx.error('This user does not exist!');
 
         /* Retrieve the node from Pelican */
-        const nodePelican = await ctx.pelican.requestApplication(`nodes/${data.node}?include=allocations`).catch((err) => ctx.pelican.handlePelicanError(err, `nodes/${data.node}`));
+        const nodePelican = await ctx.pelican.requestApplication(`nodes/${data.node}?include=allocations`).catch((err) => ctx.pelican.handlePelicanError(err, `nodes/${data.node}?include=allocations`));
         if (!nodePelican) return ctx.error('This node does not exist!');
 
         /* Retrieve the egg from Pelican */
-        const eggPelican = await ctx.pelican.requestApplication(`eggs/${data.egg}?include=variables`).catch((err) => ctx.pelican.handlePelicanError(err, `eggs/${data.egg}`));
+        const eggPelican = await ctx.pelican.requestApplication(`eggs/${data.egg}?include=variables`).catch((err) => ctx.pelican.handlePelicanError(err, `eggs/${data.egg}?include=variables`));
         if (!eggPelican) return ctx.error('This egg does not exist!');
 
         /* Update data */

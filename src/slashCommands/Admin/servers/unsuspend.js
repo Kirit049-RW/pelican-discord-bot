@@ -57,7 +57,7 @@ module.exports = class ServerUnsuspend extends SlashCommand {
             try {
                 await ctx.pelican.requestApplication(`servers/${serverPelicanId}/unsuspend`, 'post');
 
-                ctx.send({ content: `${ctx.emojiSuccess} The server \`${serverPelican.attributes.name}\` has been unsuspended!`});
+                ctx.send({ content: `${ctx.emojiSuccess} The server **${serverPelican.attributes.name}** has been unsuspended!`});
 
                 if (time) {
                     const timing = Date.now() + ms(`${time}d`);
@@ -83,7 +83,7 @@ module.exports = class ServerUnsuspend extends SlashCommand {
                 }
             } catch (err) {
                 ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}/unsuspend`, 'post');
-                ctx.error(`The server \`${serverPelican.attributes.name}\` could not be unsuspended!`);
+                ctx.error(`The server **${serverPelican.attributes.name}** could not be unsuspended!`);
             }
         } catch (err) {
             ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}`);

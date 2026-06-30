@@ -34,7 +34,7 @@ module.exports = class ServerDelete extends SlashCommand {
 
             /* Ask for confirmation */
             const embedAsk = new EmbedBuilder()
-                .setDescription(`**Are you sure you want to delete the server \`${serverPelican.attributes.name}\`?**`)
+                .setDescription(`**Are you sure you want to delete the server **${serverPelican.attributes.name}**?**`)
                 .setColor(ctx.me.displayColor)
 
             const msgAsk = await ctx.send({
@@ -55,10 +55,10 @@ module.exports = class ServerDelete extends SlashCommand {
                 try {
                     await ctx.pelican.requestApplication(`servers/${serverPelicanId}`, 'delete');
 
-                    button.message.edit({ content: `${ctx.emojiSuccess} The server \`${serverPelican.attributes.name}\` has been deleted!`, embeds: [], components: [] });
+                    button.message.edit({ content: `${ctx.emojiSuccess} The server **${serverPelican.attributes.name}** has been deleted!`, embeds: [], components: [] });
                 } catch (err) {
                     ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}`, 'delete');
-                    button.message.edit({ content: `${ctx.emojiError} The server \`${serverPelican.attributes.name}\` could not be deleted!`, embeds: [], components: [] });
+                    button.message.edit({ content: `${ctx.emojiError} The server **${serverPelican.attributes.name}** could not be deleted!`, embeds: [], components: [] });
                 }
             });
         } catch (err) {

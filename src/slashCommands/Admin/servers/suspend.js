@@ -40,10 +40,10 @@ module.exports = class ServerSuspend extends SlashCommand {
             try {
                 await ctx.pelican.requestApplication(`servers/${serverPelicanId}/suspend`, 'post');
 
-                ctx.send({ content: `${ctx.emojiSuccess} The server \`${serverPelican.attributes.name}\` has been suspended!`});
+                ctx.send({ content: `${ctx.emojiSuccess} The server **${serverPelican.attributes.name}** has been suspended!`});
             } catch (err) {
                 ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}/suspend`, 'post');
-                ctx.error(`The server \`${serverPelican.attributes.name}\` could not be suspended!`);
+                ctx.error(`The server **${serverPelican.attributes.name}** could not be suspended!`);
             }
         } catch (err) {
             ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}`);
