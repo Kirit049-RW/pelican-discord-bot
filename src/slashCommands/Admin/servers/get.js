@@ -67,7 +67,7 @@ module.exports = class ServerGet extends SlashCommand {
                         "## ✳️ Server features",
                         `> 📟 **Node:** ${nodePelican ? nodePelican.attributes.name : `\`${serverPelican.attributes.node}\` (Not found)`}`,
                         `> 🥚 **Egg** ${eggPelican ? eggPelican.attributes.name : `\`${serverPelican.attributes.egg}\` (Not found)`}`,
-                        `> 🗄️ **Database:** \`${serverPelican.attributes.feature_limits.databases === 0 ? '-' : serverPelican.attributes.feature_limits.databases}\``,
+                        `> 🗄️ **Database:** \`${serverPelican.attributes.feature_limits.databases === 0 ? '-' : `${serverPelican.attributes.relationships.databases.data.length}/${serverPelican.attributes.feature_limits.databases}`}\``,
                         `> 💾 **Backup:** \`${serverPelican.attributes.feature_limits.backups === 0 ? '-' : serverPelican.attributes.feature_limits.backups}\``,
                         `> 🌐 **Allocation:** \`${serverPelican.attributes.feature_limits.allocations === 0 ? '-' : serverPelican.attributes.feature_limits.allocations}\``
                     ].join("\n"))
@@ -98,20 +98,34 @@ module.exports = class ServerGet extends SlashCommand {
                 new ButtonBuilder()
                     .setStyle(5)
                     .setLabel('View on Pelican')
-                    .setURL(`${ctx.config["pelican"]["url"].endsWith("/") ? ctx.config["pelican"]["url"].slice(0, -1) : ctx.config["pelican"]["url"]}/admin/servers/${serverPelican.attributes.id}/edit`),
+                    .setURL(`${ctx.config["pelican"]["url"].endsWith("/") ? ctx.config["pelican"]["url"].slice(0, -1) : ctx.config["pelican"]["url"]}/admin/servers/${server.attributes.id}/edit`),
                 new ButtonBuilder()
-                    .setCustomId(`reinstall`)
+                    .setCustomId(`create_database-${serverPelican.attributes.id}`)
+                    .setLabel('Create database')
+                    .setEmoji('🗄️')
+                    .setStyle(1)
+                    .setDisabled(serverPelican.attributes.feature_limits.databases === 0 || serverPelican.attributes.relationships.databases.data.length >= serverPelican.attributes.feature_limits.databases),
+                new ButtonBuilder()
+                    .setCustomId(`delete_database-${serverPelican.attributes.id}`)
+                    .setLabel('Delete database')
+                    .setEmoji('🗄️')
+                    .setStyle(4)
+                    .setDisabled(serverPelican.attributes.relationships.databases.data.length === 0),
+            ))
+            .addActionRowComponents(r => r.addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`reinstall-${serverPelican.attributes.id}`)
                     .setLabel('Reinstall')
                     .setEmoji('🔄')
-                    .setStyle(4)
+                    .setStyle(1)
                     .setDisabled(reinstall),
                 new ButtonBuilder()
                     .setCustomId(`transfer-${serverPelican.attributes.id}`)
                     .setLabel('Transfer')
                     .setEmoji('🚚')
-                    .setStyle(4)
+                    .setStyle(1)
                     .setDisabled(transfer)
-            ))
+            ));
     }
 
     async run (ctx) {
@@ -119,7 +133,7 @@ module.exports = class ServerGet extends SlashCommand {
 
         /* Check if this pelican server exists */
         try {
-            let serverPelican = await ctx.pelican.requestApplication(`servers/${serverPelicanId}?include=user,allocations`);
+            let serverPelican = await ctx.pelican.requestApplication(`servers/${serverPelicanId}?include=user,allocations,databases`);
             if (!serverPelican) return ctx.error('This server does not exist!');
 
             /* Get the discord user registered */
@@ -155,7 +169,7 @@ module.exports = class ServerGet extends SlashCommand {
 
                     /* Ask for confirmation */
                     const embedAsk = new EmbedBuilder()
-                        .setDescription(`**Are you sure you want to reinstall the server \`${serverPelican.attributes.name}\`?**`)
+                        .setDescription(`**Are you sure you want to reinstall the server **${serverPelican.attributes.name}**?**`)
                         .setColor(ctx.me.displayColor)
 
                     const msgAsk = await ctx.send({
@@ -192,7 +206,7 @@ module.exports = class ServerGet extends SlashCommand {
                         .setTitle(`Transfer server`)
 
                     /* Retrieve nodes on Pelican */
-                    const nodesPelican = await ctx.pelican.requestApplication("nodes").catch((err) => ctx.pelican.handlePelicanError(err, `nodes?include=allocations`));
+                    const nodesPelican = await ctx.pelican.requestApplication("nodes").catch((err) => ctx.pelican.handlePelicanError(err, `nodes`));
 
                     const selectInputNode = new StringSelectMenuBuilder()
                         .setCustomId('node_value')
@@ -211,6 +225,10 @@ module.exports = class ServerGet extends SlashCommand {
                                 }
                             })
                         )
+                    }
+                    else {
+                        selectInputNode.setDisabled(true);
+                        selectInputNode.setPlaceholder('No node found on Pelican!');
                     }
 
                     const labelNode = new LabelBuilder()
@@ -293,7 +311,7 @@ module.exports = class ServerGet extends SlashCommand {
 
                                 /* Send success message */
                                 await modal.followUp({
-                                    content: `${ctx.emojiSuccess} The server \`${serverPelican.attributes.name}\` has been successfully transferred to the node **${nodePelican.attributes.name}**!`,
+                                    content: `${ctx.emojiSuccess} The server **${serverPelican.attributes.name}** has been successfully transferred to the node **${nodePelican.attributes.name}**!`,
                                     flags: MessageFlags.Ephemeral
                                 });
 
@@ -311,6 +329,156 @@ module.exports = class ServerGet extends SlashCommand {
                             }
                         });
                 }
+                else if (button.customId.startsWith('create_database-')) {
+                    /* Check if the limit is not reached */
+                    if (serverPelican.attributes.relationships.databases.data.length >= serverPelican.attributes.feature_limits.databases) return button.reply({
+                        content: `${ctx.emojiError} The limit of databases has been reached! Please increase the limit before trying to create a new database.`,
+                        flags: MessageFlags.Ephemeral
+                    });
+
+                    const date = Date.now();
+                    const modal = new ModalBuilder()
+                        .setCustomId(`create_database_${date}`)
+                        .setTitle(`Create database`)
+
+                    const textInputDatabase = new TextInputBuilder()
+                        .setCustomId('database_name')
+                        .setStyle(2)
+                        .setRequired(true)
+                        .setMaxLength(48)
+                        .setMinLength(1)
+
+                    const labelDatabase = new LabelBuilder()
+                        .setLabel(`Database name:`)
+                        .setTextInputComponent(textInputDatabase)
+
+                    modal.addLabelComponents(labelDatabase)
+
+                    button.showModal(modal);
+
+                    const filter = (modal) => modal.customId === `create_database_${date}`;
+                    button.awaitModalSubmit({ filter, time : 5 * 60 * 1000 })
+                        .catch(() => null)
+                        .then(async (modal) => {
+                            if (modal === undefined || modal === null) return
+                            await modal.deferUpdate().catch(() => null);
+
+                            const databaseName = modal.fields.getTextInputValue('database_name');
+
+                            /* Get the database host for this node */
+                            const databasesHost = await ctx.pelican.requestApplication(`database-hosts?include=nodes`).catch((err) => ctx.pelican.handlePelicanError(err, `database-hosts?include=nodes`));
+                            if (!databasesHost[0]) return modal.followUp({
+                                content: `${ctx.emojiError} No database host found on Pelican!`,
+                                flags: MessageFlags.Ephemeral
+                            });
+
+                            const databaseHost = databasesHost.find((database) => database.attributes.relationships.nodes.data[0].attributes.id === serverPelican.attributes.node);
+                            if (!databaseHost) return modal.followUp({
+                                content: `${ctx.emojiError} No database host found for this node!`,
+                                flags: MessageFlags.Ephemeral
+                            });
+
+                            const database = await ctx.pelican.requestApplication(`servers/${serverPelicanId}/databases`, 'post', {
+                                database: databaseName,
+                                remote: "%",
+                                host: databaseHost.attributes.id,
+                            }).catch((err) => ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}/databases`, 'post'));
+
+                            if (!database) {
+                                return modal.followUp({
+                                    content: `${ctx.emojiError} An error occurred while creating the database!`,
+                                    flags: MessageFlags.Ephemeral
+                                });
+                            }
+
+                            // Fetch the server again
+                            serverPelican = await ctx.pelican.requestApplication(`servers/${serverPelicanId}?include=user,allocations`);
+
+                            /* Send success message */
+                            await modal.followUp({
+                                content: `${ctx.emojiSuccess} The database \`${database.attributes.database}\` has been successfully created on the server **${serverPelican.attributes.name}**!`,
+                                flags: MessageFlags.Ephemeral
+                            });
+
+                            // Update the message
+                            return button.message.edit({
+                                components: [await this.displayComponents(ctx, serverPelican, userPelican, discordInfo, nodePelican, eggPelican)],
+                                allowedMentions: { parse: [] }
+                            }).catch(() => null);
+                        });
+                }
+                else if (button.customId.startsWith('delete_database-')) {
+                    /* Check if database exists */
+                    if (serverPelican.attributes.relationships.databases.data.length === 0) return button.reply({
+                        content: `${ctx.emojiError} No database found on this server!`,
+                        flags: MessageFlags.Ephemeral
+                    });
+
+                    const date = Date.now();
+                    const modal = new ModalBuilder()
+                        .setCustomId(`delete_database_${date}`)
+                        .setTitle(`Delete database`)
+
+                    /* Retrieve databases on Pelican */
+                    const databasesPelican = await ctx.pelican.requestApplication(`servers/${serverPelican.attributes.id}/databases`).catch((err) => ctx.pelican.handlePelicanError(err, `servers/${serverPelican.attributes.id}/databases`));
+
+                    const selectInputDatabase = new StringSelectMenuBuilder()
+                        .setCustomId('database_value')
+                        .setRequired(false)
+                        .setPlaceholder('Select a database')
+                        .setMinValues(1)
+                        .setMaxValues(1)
+
+                    if (databasesPelican[0]) {
+                        selectInputDatabase.addOptions(databasesPelican.slice(0, 25)
+                            .map((database) => {
+                                return {
+                                    label: database.attributes.database.length > 100 ? this.utils.capitalize(`${database.attributes.database.slice(0, 95)} ...`) : this.utils.capitalize(database.attributes.database),
+                                    value: String(database.attributes.id)
+                                }
+                            })
+                        )
+                    }
+                    else {
+                        selectInputDatabase.setDisabled(true);
+                        selectInputDatabase.setPlaceholder('No database found for this server!');
+                    }
+
+                    const labelDatabase = new LabelBuilder()
+                        .setLabel(`Database name:`)
+                        .setStringSelectMenuComponent(selectInputDatabase)
+
+                    modal.addLabelComponents(labelDatabase)
+
+                    button.showModal(modal);
+
+                    const filter = (modal) => modal.customId === `delete_database_${date}`;
+                    button.awaitModalSubmit({ filter, time : 5 * 60 * 1000 })
+                        .catch(() => null)
+                        .then(async (modal) => {
+                            if (modal === undefined || modal === null) return
+                            await modal.deferUpdate().catch(() => null);
+
+                            const databaseId = modal.fields.getStringSelectValues('database_value')[0];
+
+                            await ctx.pelican.requestApplication(`servers/${serverPelican.attributes.id}/databases/${databaseId}`, 'delete', ).catch((err) => ctx.pelican.handlePelicanError(err, `servers/${serverPelican.attributes.id}/databases/${databaseId}`, 'delete'));
+
+                            // Fetch the server again
+                            serverPelican = await ctx.pelican.requestApplication(`servers/${serverPelicanId}?include=user,allocations`);
+
+                            /* Send success message */
+                            await modal.followUp({
+                                content: `${ctx.emojiSuccess} The database has been successfully deleted on the server **${serverPelican.attributes.name}**!`,
+                                flags: MessageFlags.Ephemeral
+                            });
+
+                            // Update the message
+                            return button.message.edit({
+                                components: [await this.displayComponents(ctx, serverPelican, userPelican, discordInfo, nodePelican, eggPelican)],
+                                allowedMentions: { parse: [] }
+                            }).catch(() => null);
+                        });
+                }
                 else if (button.customId.startsWith('features-')) {
                     const date = Date.now();
                     const modal = new ModalBuilder()
@@ -318,7 +486,7 @@ module.exports = class ServerGet extends SlashCommand {
                         .setTitle(`Update server features`)
 
                     /* Retrieve eggs on Pelican */
-                    const eggsPelican = await ctx.pelican.requestApplication("eggs?include=variables").catch((err) => ctx.pelican.handlePelicanError(err, `eggs`));
+                    const eggsPelican = await ctx.pelican.requestApplication("eggs?include=variables").catch((err) => ctx.pelican.handlePelicanError(err, `eggs?include=variables`));
 
                     const selectInputEgg = new StringSelectMenuBuilder()
                         .setCustomId('egg_value')
@@ -716,7 +884,7 @@ module.exports = class ServerGet extends SlashCommand {
                 }
             });
         } catch (err) {
-            ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}`);
+            ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}?include=user,allocations,databases`);
             return ctx.error('An error occurred while trying to get a server from Pelican!');
         }
     }
