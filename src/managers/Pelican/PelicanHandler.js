@@ -111,6 +111,40 @@ module.exports = class PelicanHandler {
     }
 
     /**
+     * Make a request to the Wings.
+     * @param endpoint - The endpoint to request.
+     * @param nodeDetails - The details of the node to connect to.
+     * @param nodeToken - The token to authenticate with the node.
+     * @param method - The HTTP method to use (default: 'get').
+     * @param data - The data to send with the request (default: null).
+     * @return {Promise<any>}
+     */
+    async requestWings(endpoint, nodeDetails, nodeToken, method = 'get', data = null) {
+        try {
+            const response = await axios({
+                method: method,
+                url: `${nodeDetails.attributes.scheme}://${nodeDetails.attributes.fqdn}:${nodeDetails.attributes.daemon_listen}/api/${endpoint}`,
+                timeout: 2500,
+                headers: {
+                    'Authorization': `Bearer ${nodeToken}`,
+                    'Accept': 'Application/json',
+                    'Content-Type': 'application/json'
+                },
+                data
+            });
+
+            if (response.data?.data) return response.data.data;
+            return response.data;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                throw new PelicanAPIError(error, data, method);
+            }
+
+            throw error;
+        }
+    }
+
+    /**
      * Handle errors from Pelican API requests and log appropriate messages.
      * @param err - The error object.
      * @param endpoint - The endpoint that caused the error.

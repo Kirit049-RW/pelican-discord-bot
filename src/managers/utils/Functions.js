@@ -111,4 +111,47 @@ module.exports = class Functions {
             return `${Math.round(megabytes / Math.pow(1024, i))} ${sizes[i]}`;
         }
     }
+
+    /**
+     * Format bytes to a human-readable string
+     * @param bytes - The bytes to format
+     * @return {string}
+     */
+    formatBytes(bytes) {
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        if (bytes === 0) return '0 B';
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+    }
+
+    /**
+     * Get the embed color based on the Wings status
+     * @param status - The status of the Wings server
+     * @return {number}
+     */
+    embedColorFromWingsStatus(status) {
+        switch (status) {
+            case "online": return 0x00FF00; // Green
+            case "offline": return 0xFF0000; // Red
+            case "starting": return 0xFFFF00; // Yellow
+            case "stopping": return 0xFFA500; // Orange
+            case "installing": return 0x0000FF; // Blue
+            default: return 0x808080; // Grey
+        }
+    }
+
+    /**
+     * Get the embed color based on the server status
+     * @param status - The status of the server
+     * @return {string}
+     */
+    serverPowerEmojiOnly(status) {
+        switch (status) {
+            case "running": return "🟢"
+            case "offline": return "🔴"
+            case "starting": return "🟡"
+            case "stopping": return "🟠"
+            default: return "⚪"
+        }
+    }
 }

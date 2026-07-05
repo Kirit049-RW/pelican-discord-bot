@@ -37,7 +37,7 @@ module.exports = class UserList extends SlashCommand {
             .addSectionComponents(s => s
                 .addTextDisplayComponents(t => t.setContent(`# 📜 Users account (${totalUsers})`))
                 .addTextDisplayComponents(t => t.setContent(`> Select a user to see more information.`))
-                .setThumbnailAccessory(t => t.setURL(ctx.guild.iconURL() || ctx.me.displayAvatarURL()))
+                .setThumbnailAccessory(t => t.setURL(ctx.me.displayAvatarURL()))
             )
 
             for (let i = 0; i < usersList.length; i++) {
@@ -214,7 +214,7 @@ module.exports = class UserList extends SlashCommand {
                 if (reason === 'idle') return msg.edit({ components: ctx.messageFormatter.disableButtons(msg.components, true), allowedMentions: { parse: [] } }).catch(() => null);
             });
         } catch (err) {
-            ctx.pelican.handlePelicanError(err, '/users');
+            ctx.pelican.handlePelicanError(err, 'users');
             return ctx.error('An error occurred while trying to get the users from Pelican!');
         }
     }

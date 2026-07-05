@@ -90,7 +90,7 @@ module.exports = class UserGet extends SlashCommand {
 
             return ctx.send({ components: [containerUser], flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } });
         } catch (err) {
-            ctx.pelican.handlePelicanError(err, '/users');
+            ctx.pelican.handlePelicanError(err, 'users');
             return ctx.error('An error occurred while trying to get the users from Pelican!');
         }
     }
@@ -111,7 +111,7 @@ module.exports = class UserGet extends SlashCommand {
 
             return ctx.inter.respond(res);
         } catch (err) {
-            ctx.pelican.handlePelicanError(err, '/users');
+            ctx.pelican.handlePelicanError(err, 'users');
         }
     }
 }

@@ -59,7 +59,7 @@ module.exports = class UserLink extends SlashCommand {
                 content: `${ctx.emojiSuccess} The Discord user **${userDiscord.displayName}** has been successfully linked to the pelican user **${ctx.utils.capitalize(userPelican.attributes.username)}**!`
             });
         } catch (err) {
-            ctx.pelican.handlePelicanError(err, '/users/{user}');
+            ctx.pelican.handlePelicanError(err, 'users/{user}');
             ctx.error('An error occurred while trying to get the user from Pelican!');
         }
     }
@@ -80,7 +80,7 @@ module.exports = class UserLink extends SlashCommand {
 
             return ctx.inter.respond(res);
         } catch (err) {
-            ctx.pelican.handlePelicanError(err, '/users');
+            ctx.pelican.handlePelicanError(err, 'users');
         }
     }
 }

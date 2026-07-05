@@ -37,7 +37,7 @@ module.exports = class ServerList extends SlashCommand {
             .addSectionComponents(s => s
                 .addTextDisplayComponents(t => t.setContent(`# 📜 Servers (${totalServers})`))
                 .addTextDisplayComponents(t => t.setContent(`> Select a server to see more information.`))
-                .setThumbnailAccessory(t => t.setURL(ctx.guild.iconURL() || ctx.me.displayAvatarURL()))
+                .setThumbnailAccessory(t => t.setURL(ctx.me.displayAvatarURL()))
             )
 
             for (let i = 0; i < serversList.length; i++) {
@@ -81,6 +81,12 @@ module.exports = class ServerList extends SlashCommand {
         /* Retrieve the egg from Pelican */
         const eggPelican = await ctx.pelican.requestApplication(`eggs/${server.attributes.egg}`).catch((err) => ctx.pelican.handlePelicanError(err, `eggs/${server.attributes.egg}`));
 
+        /* Retrieve the node config from Pelican */
+        const nodeConfigPelican = await ctx.pelican.requestApplication(`nodes/${server.attributes.node}/configuration`).catch((err) => ctx.pelican.handlePelicanError(err, `nodes/${server.attributes.node}/configuration`));
+
+        /* Retrieve logs of the server */
+        const wingsLogs = await ctx.pelican.requestWings(`servers/${server.attributes.uuid}/logs?size=20`, nodePelican, nodeConfigPelican.token).catch((err) => ctx.pelican.handlePelicanError(err, `servers/${server.attributes.uuid}/logs?size=20`));
+
         const buttonReturn = new ButtonBuilder()
             .setCustomId('server-list')
             .setLabel('Return')
@@ -89,7 +95,7 @@ module.exports = class ServerList extends SlashCommand {
 
         const userPelican = server.attributes.relationships.user;
 
-        return new ContainerBuilder()
+        const container = new ContainerBuilder()
             .setAccentColor(ctx.me.displayColor)
             .addSectionComponents(s => s
                 .addTextDisplayComponents(t => t.setContent(`# ✳️ Server ${server.attributes.name}`))
@@ -104,7 +110,7 @@ module.exports = class ServerList extends SlashCommand {
                         `> 💬 **Description:** ${server.attributes.description ? server.attributes.description : '\`-\`'}`,
                         `> 🆔 **ID:** \`${server.attributes.id}\``,
                         `> 📅 **Created at:** <t:${Math.round(new Date(server.attributes.created_at).getTime() / 1000).toFixed()}:d>`,
-                        `> ⛔ **Suspended :** \`${server.attributes.suspended ? ctx.emojiSuccess : ctx.emojiError}\``,
+                        `> ⛔ **Suspended:** \`${server.attributes.suspended ? ctx.emojiSuccess : ctx.emojiError}\``,
                         `> 🪪 **Owner:** ${this.utils.capitalize(userPelican.attributes.username)}`,
                         `> 💬 **Discord:** ${discordInfo}`
                     ].join("\n"))
@@ -147,6 +153,17 @@ module.exports = class ServerList extends SlashCommand {
                     .setEmoji('⚙️')
                     .setStyle(2))
             )
+
+        if (wingsLogs) {
+            container.addTextDisplayComponents(t => t.setContent(
+                [
+                    "## 📝 Logs",
+                    `\`\`\`ansi\n${wingsLogs.join('\n')}\`\`\``
+                ].join("\n"))
+            )
+        }
+
+        container
             .addSeparatorComponents(s => s.setDivider(true).setSpacing(SeparatorSpacingSize.Large))
             .addActionRowComponents(r => r.addComponents(
                 new ButtonBuilder()
@@ -180,6 +197,8 @@ module.exports = class ServerList extends SlashCommand {
                     .setStyle(1)
                     .setDisabled(transfer)
             ));
+
+        return container;
     }
 
     async run (ctx) {

@@ -27,8 +27,16 @@ module.exports = class SlashCommand {
                 },
                 emoji: "⭐"
             },
-            ServerPelican : {
+            AdminPelican : {
                 id: 2,
+                name : {
+                    "fr" : "Administrateur Pelican",
+                    "en-GB" : "Pelican Admin"
+                },
+                emoji: "🛠️"
+            },
+            ServerPelican : {
+                id: 3,
                 name : {
                     "fr" : "Serveur Pelican",
                     "en-GB" : "Pelican Server"
@@ -36,7 +44,7 @@ module.exports = class SlashCommand {
                 emoji: "📡"
             },
             UserPelican : {
-                id: 3,
+                id: 4,
                 name : {
                     "fr" : "Utilisateur Pelican",
                     "en-GB" : "Pelican User"
@@ -44,7 +52,7 @@ module.exports = class SlashCommand {
                 emoji: "👤"
             },
             Admin : {
-                id: 4,
+                id: 5,
                 name : {
                     "fr" : "Administrateur",
                     "en-GB" : "Administrator"

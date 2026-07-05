@@ -91,7 +91,7 @@ module.exports = class ServerCreate extends SlashCommand {
             .addSectionComponents(s => s
                 .addTextDisplayComponents(t => t.setContent(`### ➕ Creation of a new server`))
                 .addTextDisplayComponents(t => t.setContent(`> You are currently creating a server${userDiscord}!`))
-                .setThumbnailAccessory(t => t.setURL(ctx.guild.iconURL() || ctx.me.displayAvatarURL()))
+                .setThumbnailAccessory(t => t.setURL(ctx.me.displayAvatarURL()))
             )
             .addSectionComponents(s => s
                 .addTextDisplayComponents(t => t.setContent(`# 💬 Server details`))
@@ -169,7 +169,7 @@ module.exports = class ServerCreate extends SlashCommand {
                         `${installed ? `${ctx.emojiSuccess} Installation completed. You can now manage it [here](${ctx.config['pelican']['url']}/server/${server.attributes.identifier}).` : ':clock10: Installation of the server in progress...'}`
                     ].join('\n')
                 ))
-                .setThumbnailAccessory(t => t.setURL(ctx.guild.iconURL() || ctx.me.displayAvatarURL()))
+                .setThumbnailAccessory(t => t.setURL(ctx.me.displayAvatarURL()))
             )
     }
 
@@ -650,7 +650,7 @@ module.exports = class ServerCreate extends SlashCommand {
 
                 return ctx.inter.respond(res);
             } catch (err) {
-                ctx.pelican.handlePelicanError(err, '/users');
+                ctx.pelican.handlePelicanError(err, 'users');
             }
         }
         else if (focussedQuery.name === 'node') {
@@ -666,7 +666,7 @@ module.exports = class ServerCreate extends SlashCommand {
 
                 return ctx.inter.respond(res);
             } catch (err) {
-                ctx.pelican.handlePelicanError(err, '/nodes');
+                ctx.pelican.handlePelicanError(err, 'nodes');
             }
         }
         else if (focussedQuery.name === 'egg') {
@@ -682,7 +682,7 @@ module.exports = class ServerCreate extends SlashCommand {
 
                 return ctx.inter.respond(res);
             } catch (err) {
-                ctx.pelican.handlePelicanError(err, '/eggs');
+                ctx.pelican.handlePelicanError(err, 'eggs');
             }
         }
     }

@@ -65,7 +65,7 @@ module.exports = class UserCreate extends SlashCommand {
             const userPelican = usersPelican.find(u => u.attributes.email === email);
             if (userPelican) return ctx.error('A user with this email already exist!');
         } catch (err) {
-            ctx.pelican.handlePelicanError(err, '/users');
+            ctx.pelican.handlePelicanError(err, 'users');
             return ctx.error('An error occurred while trying to get the users from Pelican!');
         }
 
@@ -93,7 +93,7 @@ module.exports = class UserCreate extends SlashCommand {
                 /* Link the user to the discord user */
                 await ctx.database.table('users').insert({ discordId: discord.id, userPelicanId: newUser.attributes.id });
             } catch (err) {
-                ctx.pelican.handlePelicanError(err, '/users', 'post');
+                ctx.pelican.handlePelicanError(err, 'users', 'post');
 
                 ctx.inter.editReply({ content: `${ctx.emojiError} An error occurred while trying to create the user on Pelican!` });
             }
@@ -190,7 +190,7 @@ module.exports = class UserCreate extends SlashCommand {
                         userPelicanId: newUser.attributes.id
                     });
                 } catch (err) {
-                    ctx.pelican.handlePelicanError(err, '/users', 'post');
+                    ctx.pelican.handlePelicanError(err, 'users', 'post');
 
                     ctx.inter.editReply({ content: `${ctx.emojiError} An error occurred while trying to create the user on Pelican!` });
                 }

@@ -116,7 +116,7 @@ module.exports = class UserUnlink extends SlashCommand {
 
             return ctx.inter.respond(res);
         } catch (err) {
-            ctx.pelican.handlePelicanError(err, '/users');
+            ctx.pelican.handlePelicanError(err, 'users');
         }
     }
 }

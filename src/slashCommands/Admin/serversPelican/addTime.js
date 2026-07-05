@@ -120,7 +120,7 @@ module.exports = class ServerAddTime extends SlashCommand {
 
             return ctx.inter.respond(res);
         } catch (err) {
-            ctx.pelican.handlePelicanError(err, '/servers');
+            ctx.pelican.handlePelicanError(err, 'servers');
         }
     }
 }
