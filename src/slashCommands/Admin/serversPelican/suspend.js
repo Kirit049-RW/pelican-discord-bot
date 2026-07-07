@@ -6,9 +6,9 @@ module.exports = class ServerSuspend extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'server-suspend',
-            description: 'Suspend a pelican server',
+            description: 'Suspend a server',
             description_localizations: {
-                "fr": "Suspendre un serveur pelican"
+                "fr": "Suspendre un serveur"
             },
             options: [{
                 name: "server",

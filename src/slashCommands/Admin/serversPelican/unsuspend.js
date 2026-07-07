@@ -6,9 +6,9 @@ module.exports = class ServerUnsuspend extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'server-unsuspend',
-            description: 'Unsuspend a pelican server',
+            description: 'Unsuspend a server',
             description_localizations: {
-                "fr": "Lever la suspension d\'un serveur pelican"
+                "fr": "Lever la suspension d\'un serveur"
             },
             options: [{
                 name: "server",

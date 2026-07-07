@@ -5,9 +5,9 @@ module.exports = class EggsList extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'eggs-list',
-            description: 'Get the list of all eggs on the pelican panel',
+            description: 'Get the list of all eggs',
             description_localizations: {
-                "fr": "Obtenir la liste de tous les oeufs du panel pelican"
+                "fr": "Obtenir la liste de tous les oeufs"
             },
             category: SlashCommand.Categories.AdminPelican,
             user_permissions: ['Administrator']

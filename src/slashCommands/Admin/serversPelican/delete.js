@@ -5,9 +5,9 @@ module.exports = class ServerDelete extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'server-delete',
-            description: 'Delete a pelican server',
+            description: 'Delete a server',
             description_localizations: {
-                "fr": "Supprimer un serveur pelican"
+                "fr": "Supprimer un serveur"
             },
             options: [{
                 name: "server",
@@ -34,7 +34,7 @@ module.exports = class ServerDelete extends SlashCommand {
 
             /* Ask for confirmation */
             const embedAsk = new EmbedBuilder()
-                .setDescription(`**Are you sure you want to delete the server **${serverPelican.attributes.name}**?**`)
+                .setDescription(`**Are you sure you want to delete the server ${serverPelican.attributes.name}?**`)
                 .setColor(ctx.me.displayColor)
 
             const msgAsk = await ctx.send({

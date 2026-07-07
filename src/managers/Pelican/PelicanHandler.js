@@ -1,11 +1,13 @@
 const axios = require('axios');
 const PelicanAPIError = require("./PelicanAPIError");
+const Encryption = require('./Encryption');
 
 module.exports = class PelicanHandler {
     constructor(client) {
         this.client = client;
         this.logger = client.logger;
         this.config = client.config["pelican"];
+        this.encryption = new Encryption()
         this.url = this.config.url.trim()
 
         this.domain = this.url.endsWith("/") ? this.url.slice(0, -1) : this.url;
@@ -34,6 +36,23 @@ module.exports = class PelicanHandler {
             return false;
         } catch (error) {
             this.logger.pelican(`⚠️ Failed to connect to Pelican application at ${this.domain}: ${error.message}`);
+            return false;
+        }
+    }
+
+    /**
+     * Check if a given client API key is valid by making a request to the Pelican client API.
+     * @param apiKey - The API key to check.
+     * @return {Promise<boolean>}
+     */
+    async isClientKeyValid(apiKey) {
+        if (!apiKey.startsWith('pacc_')) return false;
+
+        try {
+            const account = await this.requestClient('account', apiKey, "get", false);
+            if (account.attributes) return account;
+        } catch (e) {
+            this.handlePelicanError(e, 'isClientKeyValid');
             return false;
         }
     }
@@ -77,11 +96,13 @@ module.exports = class PelicanHandler {
     /**
      * Make a request to the Pelican client API.
      * @param endpoint - The endpoint to request.
+     * @param apiKey - The API key to authenticate with the client.
      * @param method - The HTTP method to use (default: 'get').
+     * @param encrypt - Whether to encrypt the request (default: false).
      * @param data - The data to send with the request (default: null).
      * @return {Promise<any>}
      */
-    async requestClient(endpoint, method = 'get', data = null) {
+    async requestClient(endpoint, apiKey, method = 'get', encrypt = true, data = null) {
         /* Check if the URL is valid */
         const isValidUrl = await this.validateUrl();
         if (!isValidUrl) throw new Error("The URL provided is not valid!");
@@ -92,7 +113,7 @@ module.exports = class PelicanHandler {
                 url: `${this.domain}/api/client/${endpoint}`,
                 headers: {
                     'responseEncoding': 'utf8',
-                    'Authorization': `Bearer ${this.config.apiKeyApp}`,
+                    'Authorization': `Bearer ${encrypt ? this.encryption.decrypt(apiKey) : apiKey}`,
                     'Accept': 'application/json',
                     'Content-Type': `${!endpoint.includes('files/write') ? 'application/json' : ''}`
                 },

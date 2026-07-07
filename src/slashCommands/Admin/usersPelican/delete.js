@@ -4,9 +4,9 @@ module.exports = class UserDelete extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'user-delete',
-            description: 'Delete a user from the pelican panel',
+            description: 'Delete a user',
             description_localizations: {
-                "fr": "Supprimer un utilisateur du panel pelican"
+                "fr": "Supprimer un utilisateur"
             },
             options: [{
                 name: 'pelican-user',

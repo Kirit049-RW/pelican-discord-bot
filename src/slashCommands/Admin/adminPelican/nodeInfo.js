@@ -5,9 +5,9 @@ module.exports = class NodeInfo extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'node-info',
-            description: 'Get information about a node on the pelican panel',
+            description: 'Get information about a node',
             description_localizations: {
-                "fr": "Obtenir des informations sur un nœud du panneau pelican"
+                "fr": "Obtenir des informations sur un nœud"
             },
             options: [{
                 name: 'node',
@@ -138,7 +138,7 @@ module.exports = class NodeInfo extends SlashCommand {
                 return `${emoji} ➜ ${name}`;
             }).join('\n');
 
-            serverListText = `\`\`\`${serverListText}\`\`\`` || 'No servers found for this node.';
+            serverListText = wingsServers[0] ? `\`\`\`${serverListText}\`\`\`` : `${ctx.emojiError}`;
 
             if (serverListText.length > 1024) {
                 serverListText = serverListText.slice(0, 1021) + '...';

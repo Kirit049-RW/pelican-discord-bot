@@ -27,7 +27,7 @@ module.exports = class SlashLogger {
         ID : ${inter.channel.id}
     ${BASE_COLOR + "1;34m"}Command: ${BASE_COLOR + "0;34m"}${inter.commandName}
         ${args.length > 0 ? args.map(x => `${x.type === 1 ? `${BASE_COLOR + "1;36m"}SubCommand: ${BASE_COLOR + "0;36m"}${x.name}
-            ${BASE_COLOR + "1;35m"}Options: ${BASE_COLOR + "0;35m"}${x.values.map(v => `${v.name}=${v.value}`).join(', ')}` : `${BASE_COLOR + "1;35m"}Options: ${BASE_COLOR + "0;35m"}${x.name}: ${x.value}` }`).join(', ') : ''}
+            ${BASE_COLOR + "1;35m"}Options: ${BASE_COLOR + "0;35m"}${x.values.map(v => `${v.name}=${v.value.startsWith("pacc_") ? "Hide" : v.value}`).join(', ')}` : `${BASE_COLOR + "1;35m"}Options: ${BASE_COLOR + "0;35m"}${x.name}: ${x.value.startsWith("pacc_") ? "Hide" : x.value}` }`).join(', ') : ''}
     ` + RESET);
     }
 }

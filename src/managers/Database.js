@@ -26,6 +26,7 @@ module.exports = class Knex {
             t.increments('id').notNullable().primary();
             t.string('discordId', 20);
             t.integer('userPelicanId', 20);
+            t.string('apiKey', 500);
         });
 
         // Bot to monit

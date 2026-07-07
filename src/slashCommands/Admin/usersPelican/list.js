@@ -5,9 +5,9 @@ module.exports = class UserList extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'user-list',
-            description: 'Get all users from the pelican panel',
+            description: 'Get all users',
             description_localizations: {
-                "fr": "Afficher tous les utilisateurs du panel pelican"
+                "fr": "Afficher tous les utilisateurs"
             },
             category: SlashCommand.Categories.UserPelican,
             user_permissions: ['Administrator'],
@@ -36,7 +36,7 @@ module.exports = class UserList extends SlashCommand {
             .setAccentColor(ctx.me.displayColor)
             .addSectionComponents(s => s
                 .addTextDisplayComponents(t => t.setContent(`# 📜 Users account (${totalUsers})`))
-                .addTextDisplayComponents(t => t.setContent(`> Select a user to see more information.`))
+                .addTextDisplayComponents(t => t.setContent(`> Select a user to see more information`))
                 .setThumbnailAccessory(t => t.setURL(ctx.me.displayAvatarURL()))
             )
 
@@ -132,7 +132,10 @@ module.exports = class UserList extends SlashCommand {
                 if (!button.customId.startsWith('user-') && button.customId !== 'user-list') return;
                 await button.deferUpdate();
 
-                if (button.customId === 'user-list') return msg.edit({ components: [container], allowedMentions: { parse: [] } }).catch(() => null);
+                if (button.customId === 'user-list') {
+                    msg = await msg.edit({ components: [container], allowedMentions: { parse: [] } }).catch(() => null);
+                    return;
+                }
 
                 /* Retrieve the user on pelican */
                 const userPelicanId = button.customId.split('-')[1];
@@ -186,7 +189,6 @@ module.exports = class UserList extends SlashCommand {
                         ].join("\n")),
                         t => t.setContent([
                             "## 🖥️ Servers",
-                            "",
                             `> 📦 **Total servers:** \`${userPelican.attributes.relationships.servers.data.length}\``,
                             `> ⛔ **Suspended servers :** \`${totalResources.suspended}\``,
                             `> 🗄️ **Databases:** \`${totalResources.databases}\``,
@@ -204,7 +206,7 @@ module.exports = class UserList extends SlashCommand {
                             .setURL(`${ctx.config["pelican"]["url"].endsWith("/") ? ctx.config["pelican"]["url"].slice(0, -1) : ctx.config["pelican"]["url"]}/admin/users/${userPelican.attributes.id}/edit`)
                     ))
 
-                return msg.edit({
+                msg = await msg.edit({
                     components: [containerUser],
                     allowedMentions: { parse: [] }
                 }).catch(() => null);

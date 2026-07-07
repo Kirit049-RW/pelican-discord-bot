@@ -5,9 +5,9 @@ module.exports = class UserGet extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'user-get',
-            description: 'Get a specific user from the pelican panel',
+            description: 'Get a specific user',
             description_localizations: {
-                "fr": "Obtenir un utilisateur spécifique du panel pelican"
+                "fr": "Obtenir un utilisateur spécifique"
             },
             options: [{
                 name: 'pelican-user',
@@ -70,7 +70,6 @@ module.exports = class UserGet extends SlashCommand {
                     ].join("\n")),
                     t => t.setContent([
                         "## 🖥️ Servers",
-                        "",
                         `> 📦 **Total servers:** \`${userPelican.attributes.relationships.servers.data.length}\``,
                         `> ⛔ **Suspended servers :** \`${totalResources.suspended}\``,
                         `> 🗄️ **Databases:** \`${totalResources.databases}\``,

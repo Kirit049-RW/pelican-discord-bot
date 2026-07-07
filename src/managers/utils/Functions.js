@@ -143,15 +143,25 @@ module.exports = class Functions {
     /**
      * Get the embed color based on the server status
      * @param status - The status of the server
-     * @return {string}
+     * @return {number}
      */
-    serverPowerEmojiOnly(status) {
+    embedColorFromStatus(status) {
         switch (status) {
-            case "running": return "🟢"
-            case "offline": return "🔴"
-            case "starting": return "🟡"
-            case "stopping": return "🟠"
-            default: return "⚪"
+            case "running": return 0x00FF00; // Green
+            case "offline": return 0xFF0000; // Red
+            case "starting": return 0xFFFF00; // Yellow
+            case "stopping": return 0xFFA500; // Orange
+            default: return 0x808080; // Grey
         }
+    }
+
+    /**
+     * Check if the email is valid
+     * @param email - The email to check
+     * @return {boolean}
+     */
+    isValidEmail(email) {
+        const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(String(email).toLowerCase());
     }
 }

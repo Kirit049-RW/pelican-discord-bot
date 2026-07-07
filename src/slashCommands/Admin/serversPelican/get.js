@@ -5,9 +5,9 @@ module.exports = class ServerGet extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'server-get',
-            description: 'Get a specific server from the pelican panel',
+            description: 'Get a specific server',
             description_localizations: {
-                "fr": "Obtenir un serveur spécifique du panel pelican"
+                "fr": "Obtenir un serveur spécifique"
             },
             options: [{
                 name: "server",
@@ -95,7 +95,7 @@ module.exports = class ServerGet extends SlashCommand {
                     .setStyle(2))
             )
 
-        if (wingsLogs) {
+        if (wingsLogs && Array.isArray(wingsLogs)) {
             container.addTextDisplayComponents(t => t.setContent(
                 [
                     "## 📝 Logs",
@@ -115,7 +115,7 @@ module.exports = class ServerGet extends SlashCommand {
                     .setCustomId(`create_database-${serverPelican.attributes.id}`)
                     .setLabel('Create database')
                     .setEmoji('🗄️')
-                    .setStyle(1)
+                    .setStyle(3)
                     .setDisabled(serverPelican.attributes.feature_limits.databases === 0 || serverPelican.attributes.relationships.databases.data.length >= serverPelican.attributes.feature_limits.databases),
                 new ButtonBuilder()
                     .setCustomId(`delete_database-${serverPelican.attributes.id}`)
@@ -164,11 +164,11 @@ module.exports = class ServerGet extends SlashCommand {
             const nodeConfigPelican = await ctx.pelican.requestApplication(`nodes/${serverPelican.attributes.node}/configuration`).catch((err) => ctx.pelican.handlePelicanError(err, `nodes/${serverPelican.attributes.node}/configuration`));
 
             /* Retrieve logs of the server */
-            const wingsLogs = await ctx.pelican.requestWings(`servers/${serverPelican.attributes.uuid}/logs?size=20`, nodePelican, nodeConfigPelican.token).catch((err) => ctx.pelican.handlePelicanError(err, `servers/${serverPelican.attributes.uuid}/logs?size=20`));
+            const wingsLogs = await ctx.pelican.requestWings(`servers/${serverPelican.attributes.uuid}/logs?size=10`, nodePelican, nodeConfigPelican.token).catch((err) => ctx.pelican.handlePelicanError(err, `servers/${serverPelican.attributes.uuid}/logs?size=10`));
 
             const userPelican = serverPelican.attributes.relationships.user;
 
-            const msg = await ctx.send({
+            let msg = await ctx.send({
                 components: [await this.displayComponents(ctx, serverPelican, userPelican, discordInfo, nodePelican, eggPelican, wingsLogs)],
                 flags: MessageFlags.IsComponentsV2,
                 allowedMentions: { parse: [] }
@@ -189,7 +189,7 @@ module.exports = class ServerGet extends SlashCommand {
 
                     /* Ask for confirmation */
                     const embedAsk = new EmbedBuilder()
-                        .setDescription(`**Are you sure you want to reinstall the server **${serverPelican.attributes.name}**?**`)
+                        .setDescription(`**Are you sure you want to reinstall the server ${serverPelican.attributes.name}?**`)
                         .setColor(ctx.me.displayColor)
 
                     const msgAsk = await ctx.send({
@@ -211,7 +211,7 @@ module.exports = class ServerGet extends SlashCommand {
 
                         await ctx.pelican.requestApplication(`servers/${serverPelicanId}/reinstall`, 'post').catch((err) => ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}/reinstall`));
 
-                        button.message.edit({
+                        msg = await button.message.edit({
                             components: [await this.displayComponents(ctx, serverPelican, userPelican, discordInfo, nodePelican, eggPelican, wingsLogs, true)],
                             allowedMentions: { parse: [] }
                         }).catch(() => null);
@@ -336,7 +336,7 @@ module.exports = class ServerGet extends SlashCommand {
                                 });
 
                                 // Update the message
-                                return button.message.edit({
+                                msg = await button.message.edit({
                                     components: [await this.displayComponents(ctx, serverPelican, userPelican, discordInfo, nodePelican, eggPelican, wingsLogs, true, true)],
                                     allowedMentions: { parse: [] }
                                 }).catch(() => null);
@@ -421,7 +421,7 @@ module.exports = class ServerGet extends SlashCommand {
                             });
 
                             // Update the message
-                            return button.message.edit({
+                            msg = await button.message.edit({
                                 components: [await this.displayComponents(ctx, serverPelican, userPelican, discordInfo, nodePelican, eggPelican, wingsLogs)],
                                 allowedMentions: { parse: [] }
                             }).catch(() => null);
@@ -493,7 +493,7 @@ module.exports = class ServerGet extends SlashCommand {
                             });
 
                             // Update the message
-                            return button.message.edit({
+                            msg = await button.message.edit({
                                 components: [await this.displayComponents(ctx, serverPelican, userPelican, discordInfo, nodePelican, eggPelican, wingsLogs)],
                                 allowedMentions: { parse: [] }
                             }).catch(() => null);
@@ -685,7 +685,7 @@ module.exports = class ServerGet extends SlashCommand {
                                 });
 
                                 // Update the message
-                                return button.message.edit({
+                                msg = await button.message.edit({
                                     components: [await this.displayComponents(ctx, serverPelican, userPelican, discordInfo, nodePelican, eggPelican, wingsLogs)],
                                     allowedMentions: { parse: [] }
                                 }).catch(() => null);
@@ -801,7 +801,7 @@ module.exports = class ServerGet extends SlashCommand {
                                 });
 
                                 // Update the message
-                                return button.message.edit({
+                                msg = await button.message.edit({
                                     components: [await this.displayComponents(ctx, serverPelican, userPelican, discordInfo, nodePelican, eggPelican, wingsLogs)],
                                     allowedMentions: { parse: [] }
                                 }).catch(() => null);
@@ -889,7 +889,7 @@ module.exports = class ServerGet extends SlashCommand {
                                 });
 
                                 // Update the message
-                                return button.message.edit({
+                                msg = await button.message.edit({
                                     components: [await this.displayComponents(ctx, serverPelican, userPelican, discordInfo, nodePelican, eggPelican, wingsLogs)],
                                     allowedMentions: { parse: [] }
                                 }).catch(() => null);
@@ -902,6 +902,10 @@ module.exports = class ServerGet extends SlashCommand {
                             }
                         });
                 }
+            });
+
+            collectorButton.on('end', (_, reason) => {
+                if (reason === 'idle') return msg.edit({ components: ctx.messageFormatter.disableButtons(msg.components, true) }).catch(() => null);
             });
         } catch (err) {
             ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}?include=user,allocations,databases`);

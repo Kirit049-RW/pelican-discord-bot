@@ -8,9 +8,9 @@ module.exports = class UserCreate extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'user-create',
-            description: 'Create a new user on the pelican panel',
+            description: 'Create a new user',
             description_localizations: {
-                "fr": "Créer un nouvel utilisateur sur le panel pelican"
+                "fr": "Créer un nouvel utilisateur"
             },
             options: [{
                 name: 'email',

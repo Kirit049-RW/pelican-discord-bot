@@ -6,9 +6,9 @@ module.exports = class ServerAddTime extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'server-add-time',
-            description: 'Add time to a pelican server',
+            description: 'Add time to a server',
             description_localizations: {
-                "fr": "Ajouter du temps à un serveur pelican"
+                "fr": "Ajouter du temps à un serveur"
             },
             options: [{
                 name: "server",

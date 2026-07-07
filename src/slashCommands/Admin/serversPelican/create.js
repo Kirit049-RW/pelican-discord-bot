@@ -8,9 +8,9 @@ module.exports = class ServerCreate extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'server-create',
-            description: 'Create a new server on the pelican panel',
+            description: 'Create a new server',
             description_localizations: {
-                "fr": "Créer un nouveau serveur sur le panel pelican"
+                "fr": "Créer un nouveau serveur"
             },
             options: [{
                 name: 'name',
