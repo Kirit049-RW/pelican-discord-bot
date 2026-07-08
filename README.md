@@ -94,12 +94,12 @@ Rename config.example.json to config.json
     "channelId": "Channel where the bot will send the monitoring messages of the status of the bot",
     "roleId": "Role to ping when the bot is down"
   },
-  "pterodactyl": {
+  "pelican": {
     "url": "URL of the panel : https://panel.xxx.com",
-    "apiKeyApp": "App API key on pterodactyl : ptla_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "apiKeyApp": "App API key on pelican : ptla_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     "mailSetup": "If the mail system is enabled on the panel : true or false",
-    "host": "SFTP of the pterodactyl : xxx.com",
-    "port": "Port of the pterodactyl : 2022"
+    "host": "SFTP of the pelican : xxx.com",
+    "port": "Port of the pelican : 2022"
   }
 }
 ```

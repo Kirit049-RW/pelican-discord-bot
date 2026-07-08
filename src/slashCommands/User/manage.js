@@ -1,5 +1,5 @@
 const SlashCommand = require('../../managers/structures/SlashCommands.js');
-const { MessageFlags, ContainerBuilder, SeparatorSpacingSize, ButtonBuilder, EmbedBuilder, ModalBuilder, TextInputBuilder, LabelBuilder, StringSelectMenuBuilder, CheckboxGroupBuilder } = require('discord.js');
+const { MessageFlags, ContainerBuilder, SeparatorSpacingSize, ButtonBuilder, EmbedBuilder, ModalBuilder, TextInputBuilder, LabelBuilder, StringSelectMenuBuilder, CheckboxGroupBuilder, UserSelectMenuBuilder } = require('discord.js');
 
 module.exports = class Manage extends SlashCommand {
     constructor(handler) {
@@ -91,11 +91,12 @@ module.exports = class Manage extends SlashCommand {
      * Display the server information
      * @param ctx The command context
      * @param server The server
+     * @param serverMonitor The server monitor
      * @param apiKey The api key of the user
      * @param reinstall If the server is being reinstalled
      * @return {Promise<ContainerBuilder>}
      */
-    async displayServer(ctx, server, apiKey, reinstall = false) {
+    async displayServer(ctx, server, serverMonitor, apiKey, reinstall = false) {
         /* Retrieve nodes from Pelican */
         const nodesPelican = await ctx.pelican.requestApplication(`nodes`).catch((err) => ctx.pelican.handlePelicanError(err, `nodes`));
         const nodePelican = nodesPelican.find((n) => n.attributes.name === server.attributes.node);
@@ -268,13 +269,13 @@ module.exports = class Manage extends SlashCommand {
             .addActionRowComponents(r => r.addComponents(
                 new ButtonBuilder()
                     .setCustomId(`add_subuser-${server.attributes.identifier}`)
-                    .setLabel('Add sub user')
+                    .setLabel('Add / Edit subuser')
                     .setStyle(3)
                     .setEmoji('👤')
                     .setDisabled(this.isMissingPermissions(server, 'subusers') || server.attributes.is_suspended),
                 new ButtonBuilder()
                     .setCustomId(`delete_subuser-${server.attributes.identifier}`)
-                    .setLabel('Delete sub user')
+                    .setLabel('Delete subuser')
                     .setStyle(4)
                     .setEmoji('👤')
                     .setDisabled(subUsers && subUsers.length === 0 || this.isMissingPermissions(server, 'subusers') || server.attributes.is_suspended)
@@ -323,6 +324,32 @@ module.exports = class Manage extends SlashCommand {
                     .setLabel('View on Pelican')
                     .setURL(`${ctx.config["pelican"]["url"].endsWith("/") ? ctx.config["pelican"]["url"].slice(0, -1) : ctx.config["pelican"]["url"]}/server/${server.attributes.identifier}`)
             ));
+
+        if (server.attributes.server_owner) {
+            const usersId = serverMonitor ? Array.isArray(serverMonitor) ? serverMonitor : JSON.parse(serverMonitor.usersId) : [];
+            const hasOwner = usersId.includes(ctx.user.id);
+            const subusersMonitor = usersId.filter(id => !ctx.user.id.includes(id));
+
+            container
+                .addSeparatorComponents(s => s.setDivider(true).setSpacing(SeparatorSpacingSize.Small))
+                .addTextDisplayComponents(t => t.setContent(`## 🔔 Monitor\n> 🪪 **Owner:** ${hasOwner ? `\`${ctx.emojiSuccess}\`` : `\`${ctx.emojiError}\`` }\n> 👥 **Subusers:** ${subusersMonitor.length > 0 ? subusersMonitor.map(
+                    s => ctx.getMember(s) || `\`${s}\``
+                ) : `\`${ctx.emojiError}\`` }`))
+                .addActionRowComponents(r => r.addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`add_monitor-${server.attributes.identifier}`)
+                        .setLabel('Add / Edit monitor')
+                        .setEmoji('🔔')
+                        .setStyle(3),
+                    new ButtonBuilder()
+                        .setCustomId(`delete_monitor-${server.attributes.identifier}`)
+                        .setLabel('Delete monitor')
+                        .setEmoji('🔕')
+                        .setStyle(4)
+                        .setDisabled(usersId.length === 0)
+                ));
+
+        }
 
         return container;
     }
@@ -403,6 +430,9 @@ module.exports = class Manage extends SlashCommand {
                 let serverPelican = await ctx.pelican.requestClient(`servers/${serverPelicanId}?include=egg,subusers`, userDatabase.apiKey).catch((err) => ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}?include=egg,subusers`));
                 if (!serverPelican) return menu.reply({ content: `${ctx.emojiError} This server does not exist on Pelican!`, flags: MessageFlags.Ephemeral });
 
+                /* Get the server monitoring in database */
+                const serverMonitor = await ctx.database.table('monitoring_servers').first().where({ serverId: serverPelicanId });
+
                 if (menu.customId.startsWith('power_actions')) {
                     await menu.deferUpdate();
 
@@ -459,7 +489,7 @@ module.exports = class Manage extends SlashCommand {
 
                     // Update the message
                     msg = await menu.message.edit({
-                        components: [await this.displayServer(ctx, serverPelican, userDatabase.apiKey)]
+                        components: [await this.displayServer(ctx, serverPelican, serverMonitor, userDatabase.apiKey)]
                     }).catch(() => null);
                 }
             });
@@ -490,7 +520,10 @@ module.exports = class Manage extends SlashCommand {
                     flags: MessageFlags.Ephemeral
                 });
 
-                else if (button.customId.startsWith('reinstall-')) {
+                /* Get the server monitoring in database */
+                const serverMonitor = await ctx.database.table('monitoring_servers').first().where({ serverId: serverPelicanId });
+
+                if (button.customId.startsWith('reinstall-')) {
                     await button.deferUpdate();
 
                     // Disable buttons
@@ -516,14 +549,14 @@ module.exports = class Manage extends SlashCommand {
 
                         // If the user cancels the confirmation
                         if (buttonConfirm.customId !== 'yes') msg = await button.message.edit({
-                            components: [await this.displayServer(ctx, serverPelican, userDatabase.apiKey)]
+                            components: [await this.displayServer(ctx, serverPelican, serverMonitor, userDatabase.apiKey)]
                         }).catch(() => null);
 
                         await ctx.pelican.requestClient(`servers/${serverPelicanId}/settings/reinstall`, userDatabase.apiKey, 'post').catch((err) => ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}/settings/reinstall`));
 
                         button.followUp({ content: `${ctx.emojiSuccess} The server is being reinstalled!` });
                         msg = await button.message.edit({
-                            components: [await this.displayServer(ctx, serverPelican, userDatabase.apiKey, true)]
+                            components: [await this.displayServer(ctx, serverPelican, serverMonitor, userDatabase.apiKey, true)]
                         }).catch(() => null);
                     });
                 }
@@ -570,7 +603,7 @@ module.exports = class Manage extends SlashCommand {
                                 database: databaseName,
                                 remote: "%"
                             }).catch((err) => ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}/databases`, 'post'));
-console.log(database)
+
                             if (!database) {
                                 return modal.followUp({
                                     content: `${ctx.emojiError} An error occurred while creating the database!`,
@@ -589,7 +622,7 @@ console.log(database)
 
                             // Update the message
                             msg = await button.message.edit({
-                                components: [await this.displayServer(ctx, serverPelican, userDatabase.apiKey)]
+                                components: [await this.displayServer(ctx, serverPelican, serverMonitor, userDatabase.apiKey)]
                             }).catch(() => null);
                         });
                 }
@@ -660,7 +693,7 @@ console.log(database)
 
                             // Update the message
                             msg = await button.message.edit({
-                                components: [await this.displayServer(ctx, serverPelican, userDatabase.apiKey)]
+                                components: [await this.displayServer(ctx, serverPelican, serverMonitor, userDatabase.apiKey)]
                             }).catch(() => null);
                         });
                 }
@@ -726,7 +759,7 @@ console.log(database)
 
                             // Update the message
                             msg = await button.message.edit({
-                                components: [await this.displayServer(ctx, serverPelican, userDatabase.apiKey)]
+                                components: [await this.displayServer(ctx, serverPelican, serverMonitor, userDatabase.apiKey)]
                             }).catch(() => null);
                         });
                 }
@@ -797,7 +830,7 @@ console.log(database)
 
                             // Update the message
                             msg = await button.message.edit({
-                                components: [await this.displayServer(ctx, serverPelican, userDatabase.apiKey)]
+                                components: [await this.displayServer(ctx, serverPelican, serverMonitor, userDatabase.apiKey)]
                             }).catch(() => null);
                         });
                 }
@@ -807,7 +840,7 @@ console.log(database)
 
                     const date = Date.now();
                     const modal = new ModalBuilder()
-                        .setTitle('Add a sub user')
+                        .setTitle('Add a subuser')
                         .setCustomId(`add_user_${date}`)
 
                     const inputEmail = new TextInputBuilder()
@@ -867,7 +900,7 @@ console.log(database)
                         .setTextInputComponent(inputEmail)
 
                     const labelInputPermissions = new LabelBuilder()
-                        .setLabel(`Permissions of the sub user:`)
+                        .setLabel(`Permissions of the subuser:`)
                         .setCheckboxGroupComponent(checkBoxGroupPermissions)
 
                     modal
@@ -906,13 +939,13 @@ console.log(database)
                             });
 
                             if (account.attributes.email === email) return button.followUp({
-                                content: `${ctx.emojiError} You cannot add yourself as a sub user!`,
+                                content: `${ctx.emojiError} You cannot add yourself as a subuser!`,
                                 flags: MessageFlags.Ephemeral
                             });
 
                             /* Check if the user is the owner of the server */
                             if (serverPelican.attributes.server_owner && account.attributes.email === email) return button.followUp({
-                                content: `${ctx.emojiError} You cannot add the owner of the server as a sub user!`,
+                                content: `${ctx.emojiError} You cannot add the owner of the server as a subuser!`,
                                 flags: MessageFlags.Ephemeral
                             });
 
@@ -950,7 +983,7 @@ console.log(database)
                                 }).catch((err) => ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}/users/${subuser.attributes.uuid}`, 'post'));
 
                                 if (!subUserUpdate) return button.followUp({
-                                    content: `${ctx.emojiError} An error occurred while updating the sub user!`,
+                                    content: `${ctx.emojiError} An error occurred while updating the subuser!`,
                                     flags: MessageFlags.Ephemeral
                                 });
 
@@ -968,13 +1001,13 @@ console.log(database)
                                 }).catch((err) => ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}/users`, 'post'));
 
                                 if (!subUserNew) return button.followUp({
-                                    content: `${ctx.emojiError} An error occurred while adding the sub user!`,
+                                    content: `${ctx.emojiError} An error occurred while adding the subuser!`,
                                     flags: MessageFlags.Ephemeral
                                 });
 
                                 /* Send success message */
                                 await modal.followUp({
-                                    content: `${ctx.emojiSuccess} The user **${subUserNew.attributes.username}** has been added as a sub user on this server!`,
+                                    content: `${ctx.emojiSuccess} The user **${subUserNew.attributes.username}** has been added as a subuser on this server!`,
                                     flags: MessageFlags.Ephemeral
                                 });
                             }
@@ -984,7 +1017,7 @@ console.log(database)
 
                             // Update the message
                             msg = await button.message.edit({
-                                components: [await this.displayServer(ctx, serverPelican, userDatabase.apiKey)]
+                                components: [await this.displayServer(ctx, serverPelican, serverMonitor, userDatabase.apiKey)]
                             }).catch(() => null);
                         });
                 }
@@ -992,18 +1025,18 @@ console.log(database)
                     /* Get the list of sub users */
                     const subUsers = serverPelican.attributes.relationships.subusers.data;
                     if (subUsers.length === 0) return button.reply({
-                        content: `${ctx.emojiError} No sub user found on this server!`,
+                        content: `${ctx.emojiError} No subuser found on this server!`,
                         flags: MessageFlags.Ephemeral
                     });
 
                     const date = Date.now();
                     const modal = new ModalBuilder()
-                        .setTitle('Delete a sub user')
+                        .setTitle('Delete a subuser')
                         .setCustomId(`delete_user_${date}`)
 
                     const inputSubUser = new StringSelectMenuBuilder()
                         .setCustomId(`subuser_value`)
-                        .setPlaceholder('Select a sub user')
+                        .setPlaceholder('Select a subuser')
                         .setMinValues(1)
                         .setMaxValues(1)
                         .setRequired(true)
@@ -1016,7 +1049,7 @@ console.log(database)
                         }).slice(0, 25))
 
                     const labelSubUser = new LabelBuilder()
-                    .setLabel(`Sub user to delete:`)
+                    .setLabel(`Subuser to delete:`)
                     .setStringSelectMenuComponent(inputSubUser)
 
                     modal.addLabelComponents(labelSubUser)
@@ -1040,7 +1073,7 @@ console.log(database)
                             });
 
                             if (account.attributes.uuid === subUserId) return button.followUp({
-                                content: `${ctx.emojiError} You cannot delete yourself from sub user!`,
+                                content: `${ctx.emojiError} You cannot delete yourself from subuser!`,
                                 flags: MessageFlags.Ephemeral
                             });
 
@@ -1058,7 +1091,7 @@ console.log(database)
 
                             // Update the message
                             msg = await button.message.edit({
-                                components: [await this.displayServer(ctx, serverPelican, userDatabase.apiKey)]
+                                components: [await this.displayServer(ctx, serverPelican, serverMonitor, userDatabase.apiKey)]
                             }).catch(() => null);
                         });
                 }
@@ -1154,15 +1187,176 @@ console.log(database)
 
                             // Update the message
                             msg = await button.message.edit({
-                                components: [await this.displayServer(ctx, serverPelican, userDatabase.apiKey)]
+                                components: [await this.displayServer(ctx, serverPelican, serverMonitor, userDatabase.apiKey)]
                             }).catch(() => null);
                         });
+                }
+                else if (button.customId.startsWith('add_monitor-')) {
+                    /* Get the list of subusers */
+                    const subUsers = serverPelican.attributes.relationships.subusers.data;
+
+                    const date = Date.now();
+                    const modal = new ModalBuilder()
+                        .setCustomId(`add_monitor_${date}`)
+                        .setTitle(`Monitor the server`)
+
+                    const textInputChoice = new CheckboxGroupBuilder()
+                        .setCustomId('users_value')
+                        .setRequired(true)
+                        .setMaxValues(2)
+                        .setMinValues(1)
+                        .addOptions([{
+                            label: "Me (owner)",
+                            description: "I will be notified about status changes",
+                            value: "owner",
+                            default: !!(serverMonitor && JSON.parse(serverMonitor.usersId).find(userId => userId === ctx.user.id))
+                        }, {
+                            label: "Subusers",
+                            description: "Choose subusers that will be notified about status changes",
+                            value: "subusers",
+                            default: !!(serverMonitor && JSON.parse(serverMonitor.usersId).filter(userId => userId !== ctx.user.id).length > 0)
+                        }])
+
+                    const inputSubUsers = new UserSelectMenuBuilder()
+                        .setCustomId(`subusers_value`)
+                        .setPlaceholder('Select a subuser')
+                        .setRequired(false)
+                        .setMinValues(0)
+                        .setMaxValues(subUsers.length)
+
+                    if (serverMonitor) {
+                        const usersId = JSON.parse(serverMonitor.usersId);
+
+                        inputSubUsers.setDefaultUsers(usersId.filter((userId) => userId !== ctx.user.id));
+                    }
+
+                    const labelChoice = new LabelBuilder()
+                        .setLabel(`People to notify:`)
+                        .setCheckboxGroupComponent(textInputChoice)
+
+                    const labelSubUsers = new LabelBuilder()
+                        .setLabel(`Subusers to notify:`)
+                        .setUserSelectMenuComponent(inputSubUsers)
+
+                    modal
+                        .addLabelComponents(labelChoice)
+                        .addLabelComponents(labelSubUsers)
+
+                    button.showModal(modal);
+
+                    const filter = (modal) => modal.customId === `add_monitor_${date}`;
+                    button.awaitModalSubmit({ filter, time : 5 * 60 * 1000 })
+                        .catch(() => null)
+                        .then(async (modal) => {
+                            if (modal === undefined || modal === null) return
+                            await modal.deferUpdate().catch(() => null);
+
+                            const choices = modal.fields.getCheckboxGroup('users_value');
+                            const subUsers = modal.fields.getSelectedUsers('subusers_value')?.map((u) => u) || [];
+
+                            let usersId = []
+                            for (const choice of choices) {
+                                if (choice === "owner") {
+                                    usersId.push(ctx.user.id);
+                                }
+                                else if (choice === "subusers") {
+                                    /* If the list of sub users is empty, send error message */
+                                    if (subUsers.length === 0) return button.followUp({
+                                        content: `${ctx.emojiError} You must select at least one subuser!`,
+                                        flags: MessageFlags.Ephemeral
+                                    });
+
+                                    for (const subUser of subUsers) {
+                                        /* If the owner is in the list, don't add it */
+                                        if (subUser.id === ctx.user.id) continue;
+
+                                        /* If the sub user is a bot, don't add it */
+                                        if (subUser.bot) continue;
+
+                                        usersId.push(subUser.id);
+                                    }
+                                }
+                            }
+
+                            if (serverMonitor) {
+                                /* Update the server in the database */
+                                await ctx.database.table('monitoring_servers').update({
+                                    usersId: JSON.stringify(usersId)
+                                }).where({ serverId: serverPelicanId });
+                            }
+                            else {
+                                /* Add the server to the database */
+                                await ctx.database.table('monitoring_servers').insert({
+                                    serverId: serverPelicanId,
+                                    discordId: ctx.user.id,
+                                    usersId: JSON.stringify(usersId)
+                                });
+                            }
+
+                            // Fetch the server again
+                            serverPelican = await ctx.pelican.requestClient(`servers/${serverPelicanId}?include=egg,subusers`, userDatabase.apiKey).catch((err) => ctx.pelican.handlePelicanError(err, `servers/${serverPelicanId}?include=egg,subusers`));
+
+                            /* Send success message */
+                            await modal.followUp({
+                                content: `${ctx.emojiSuccess} The server is now being monitored! The selected users will be notified about status changes in private messages. **Be sure that they open their DMs to receive notifications**.`,
+                                flags: MessageFlags.Ephemeral
+                            });
+
+                            // Update the message
+                            msg = await button.message.edit({
+                                components: [await this.displayServer(ctx, serverPelican, usersId, userDatabase.apiKey)]
+                            }).catch(() => null);
+                        });
+                }
+                else if (button.customId.startsWith('delete_monitor-')) {
+                    await button.deferUpdate();
+
+                    // Disable buttons
+                    await msg.edit({
+                        components: ctx.messageFormatter.disableButtons(button.message.components, true)
+                    }).catch(() => null);
+
+                    /* Ask for confirmation */
+                    const embedAsk = new EmbedBuilder()
+                        .setDescription(`**Are you sure you want to delete monitor for the server ${serverPelican.attributes.name}?**`)
+                        .setColor(ctx.me.displayColor)
+
+                    const msgAsk = await ctx.send({
+                        embeds: [embedAsk],
+                        components: ctx.messageFormatter.question()
+                    });
+
+                    const collectorAsk = msgAsk.createMessageComponentCollector({ filter, idle: 5 * 60 * 1000, componentType: 2, max: 1 });
+                    collectorAsk.on('collect', async (buttonConfirm) => {
+                        await buttonConfirm.deferUpdate();
+                        msgAsk.delete().catch(() => null);
+                        collectorAsk.stop();
+
+                        // If the user cancels the confirmation
+                        if (buttonConfirm.customId !== 'yes') msg = await button.message.edit({
+                            components: [await this.displayServer(ctx, serverPelican, serverMonitor, userDatabase.apiKey)]
+                        }).catch(() => null);
+
+                        /* Delete the server monitoring in database */
+                        await ctx.database.table('monitoring_servers').delete().where({ serverId: serverPelicanId });
+
+                        /* Send success message */
+                        await button.followUp({
+                            content: `${ctx.emojiSuccess} The server monitoring has been deleted! You will no longer receive notifications about status changes.`,
+                            flags: MessageFlags.Ephemeral
+                        });
+
+                        // Update the message
+                        msg = await button.message.edit({
+                            components: [await this.displayServer(ctx, serverPelican, [], userDatabase.apiKey)]
+                        }).catch(() => null);
+                    });
                 }
                 else {
                     await button.deferUpdate();
 
                     msg = await button.message.edit({
-                        components: [await this.displayServer(ctx, serverPelican, userDatabase.apiKey)]
+                        components: [await this.displayServer(ctx, serverPelican, serverMonitor, userDatabase.apiKey)]
                     }).catch(() => null);
                 }
             });

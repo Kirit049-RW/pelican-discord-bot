@@ -1,4 +1,4 @@
-module.exports = class BotMonitoring {
+module.exports = class MonitorDiscordBots {
     constructor(event) {
         this.client = event.client
         this.database = event.database
@@ -13,7 +13,7 @@ module.exports = class BotMonitoring {
         if (!member.user.bot) return
 
         /* Check if the bot is in the database */
-        const botToWatch = await this.database.table('monitoring').select().where({ botId: member.id });
+        const botToWatch = await this.database.table('monitoring_discord_bot').select().where({ botId: member.id });
         if (!botToWatch[0]) return
 
         /* Get the cooldown */

@@ -1,5 +1,5 @@
 const Events = require('../../managers/structures/Events');
-const BotMonitoring = require('../../services/System/BotMonitoring');
+const BotMonitoring = require('../../services/System/MonitorDiscordBots');
 
 module.exports = class PresenceUpdate extends Events {
     constructor (client) {

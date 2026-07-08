@@ -4,9 +4,9 @@ module.exports = class MonitoringAdd extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'monitoring-add',
-            description: 'Add a bot to the monitoring',
+            description: 'Add a Discord bot to the monitoring',
             description_localizations: {
-                "fr": "Ajouter un bot à la surveillance"
+                "fr": "Ajouter un bot Discord à la surveillance"
             },
             options: [{
                 name: "bot",
@@ -33,11 +33,11 @@ module.exports = class MonitoringAdd extends SlashCommand {
         if (botMember.user.id === ctx.client.user.id) return ctx.error('I can\'t monitor myself!');
 
         /* Check if the bot is already monitored */
-        const monitoring = await ctx.database.table('monitoring').where('botId', botMember.user.id);
+        const monitoring = await ctx.database.table('monitoring_discord_bot').where('botId', botMember.user.id);
         if (monitoring[0]) return ctx.error('This bot is already monitored!');
 
         /* Add the bot to the monitoring */
-        await ctx.database.table('monitoring').insert({
+        await ctx.database.table('monitoring_discord_bot').insert({
             botId: botMember.user.id,
             createdAt: Date.now()
         });

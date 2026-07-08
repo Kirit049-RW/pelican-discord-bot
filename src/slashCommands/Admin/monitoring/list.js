@@ -5,9 +5,9 @@ module.exports = class MonitoringList extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'monitoring-list',
-            description: 'Display the list of all bots monitored',
+            description: 'Display the list of all Discord bots monitored',
             description_localizations: {
-                "fr": "Afficher la liste des bots surveillés"
+                "fr": "Afficher la liste des bots Discord surveillés"
             },
             category: SlashCommand.Categories.Admin,
             user_permissions: ['Administrator'],
@@ -16,7 +16,7 @@ module.exports = class MonitoringList extends SlashCommand {
     }
 
     async run (ctx) {
-        const monitoring = await ctx.database.table('monitoring');
+        const monitoring = await ctx.database.table('monitoring_discord_bot');
         if (!monitoring[0]) return ctx.error('There is no bot monitored!');
 
         const embed = new EmbedBuilder()

@@ -4,9 +4,9 @@ module.exports = class MonitoringRemove extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'monitoring-remove',
-            description: 'Remove a bot from the monitoring',
+            description: 'Remove a Discord bot from the monitoring',
             description_localizations: {
-                "fr": "Retirer un bot de la surveillance"
+                "fr": "Retirer un bot Discord de la surveillance"
             },
             options: [{
                 name: "bot",
@@ -29,11 +29,11 @@ module.exports = class MonitoringRemove extends SlashCommand {
         if (!bot.bot) return ctx.error('This user is not a bot!');
 
         /* Check if the bot is monitored */
-        const monitoring = await ctx.database.table('monitoring').where('botId', bot.id);
+        const monitoring = await ctx.database.table('monitoring_discord_bot').where('botId', bot.id);
         if (!monitoring[0]) return ctx.error('This bot is not monitored!');
 
         /* Remove the bot from the monitoring */
-        await ctx.database.table('monitoring').delete().where({ botId: bot.id });
+        await ctx.database.table('monitoring_discord_bot').delete().where({ botId: bot.id });
 
         /* Send the success message */
         ctx.send({ content: `${ctx.emojiSuccess} The bot **${bot.displayName}** has been removed from the monitoring!` });
