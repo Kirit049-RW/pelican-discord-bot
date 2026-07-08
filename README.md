@@ -12,6 +12,7 @@ A powerful Discord bot to manage your Pelican panel.
 - ⚙️ Configuration
 - 🚀 Getting Started
 - 🔗 Links
+- ⛔ Reporting Issues
 - 📝 License
 
 ---
@@ -19,25 +20,46 @@ A powerful Discord bot to manage your Pelican panel.
 ## 📖 Description
 Pelican Discord Bot allows you to manage your **Pelican panel directly from Discord**.
 
-### 🖥️ Server Management
+### 🖥️ Pelican Management
+- 📟 List all eggs
+- 🥚 Get information about all nodes
+
+### 🖥️ Admin Server Management
 - ➕ Create servers
 - ❌ Delete servers
-- 📋 View all servers
-- 🔍 Server details
-- ⛔ Suspend / Unsuspend servers
+- 📋 View and manage all servers or a specific one:
+  - Server details (name, description)
+  - Server features (egg, databases / backups / allocations limits)
+  - Server limits (CPU / memory / disk)
+  - Manage databases / backups (add / remove)
+  - Reinstall
+  - Transfert
+- ⛔ Suspend / Unsuspend servers (can add timer to automatically suspend the server)
 
-### 👤 User Management
+### 👤 Admin User Management
 - ➕ Create users (email or PDF password delivery)
 - ❌ Delete users
-- 📋 View users
-- 🔍 User details
+- 📋 View users or a specific one
 - 🔗 Link / Unlink Discord accounts
 
+
+### 👤 User Management
+- 🔑 Add / Remove api key to be able to manage your servers from Discord
+- ✏️ Get information about your Pelican account
+- 🖥️ View and manage your servers:
+  - Server details (name, description)
+  - Manage power actions (start / stop / restart / kill)
+  - Manage subusers (add / remove)
+  - Manage databases / backups (add / remove)
+  - Reinstall
+  - Manage monitoring of the server by sending a private message to the users selected when the server is down or up (Add / Remove)
+
 ### 📊 Monitoring
-- 📡 Monitor bot status
-- ➕ Add monitored bots
-- ❌ Remove monitored bots
-- 📋 View monitoring dashboard
+- 📡 Monitor Discord bot status:
+  - ➕ Add monitored Discord bots
+  - ❌ Remove monitored Discord bots
+  - 📋 View a list of Discord bots monitored
+- 🖥️ Monitor Pelican servers
 
 ---
 
@@ -45,9 +67,10 @@ Pelican Discord Bot allows you to manage your **Pelican panel directly from Disc
 
 ### 🤖 Discord Interactions
 - Slash commands
-- Autocomplete (users, servers)
-- Buttons & select menus
+- Autocomplete (users, servers, nodes)
+- Buttons & select menus & modals
 - Modern Discord UI components (Embed V2 style)
+- Cron system to automatically restart tasks after restart of the bot
 
 ### 🔐 Flexible API System
 - 🌐 Global API key (application-level actions)
@@ -143,6 +166,13 @@ node main.js
 - Our website where you can find all our bots:
 
     🌐 Website: https://botmarket.ovh
+
+---
+
+## ⛔ Reporting Issues
+If you find any bugs or encounter unexpected behavior, please don't hesitate to open an issue. Your feedback is valuable and helps improve the project.
+
+You can report issues here: https://github.com/Kirit049-RW/pelican-discord-bot/issues
 
 ---
 
