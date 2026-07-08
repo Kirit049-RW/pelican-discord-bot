@@ -1,6 +1,4 @@
 const SlashCommand = require('../../../managers/structures/SlashCommands.js');
-const ms = require("ms");
-const schedule = require("node-schedule");
 
 module.exports = class ServerSuspend extends SlashCommand {
     constructor(handler) {
