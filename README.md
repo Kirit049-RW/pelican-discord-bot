@@ -58,9 +58,11 @@ Pelican Discord Bot allows you to manage your **Pelican panel directly from Disc
 - 📡 Monitor Discord bot status:
   - ➕ Add monitored Discord bots
   - ❌ Remove monitored Discord bots
-  - 📋 View a list of Discord bots monitored
+  - 📋 View a list of monitored Discord bots
 - 🖥️ Monitor Pelican servers
-
+  - ➕ Add monitored servers
+  - ❌ Remove monitored servers
+  - 📋 View a list of monitored servers
 ---
 
 ## ⚡ Features
