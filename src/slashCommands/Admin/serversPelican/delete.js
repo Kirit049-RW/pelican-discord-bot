@@ -78,7 +78,7 @@ module.exports = class ServerDelete extends SlashCommand {
 
             if (serversPelican.length === 0) return ctx.inter.respond([{ name: "No server found", value: "nothing_found" }]);
 
-            const res = serversPelican.filter(s => s.attributes.name.toLowerCase().includes(focussedQuery.toLowerCase())).map(s => ({ name: s.attributes.name, value: String(s.attributes.id) })).slice(0, 25);
+            const res = serversPelican.filter(s => s.attributes.name.toLowerCase().includes(focussedQuery.toLowerCase())).map(s => ({ name: ctx.utils.capitalize(s.attributes.name), value: String(s.attributes.id) })).slice(0, 25);
             if (res.length === 0) return ctx.inter.respond([{ name: "No server found", value: "nothing_found" }]);
 
             return ctx.inter.respond(res);

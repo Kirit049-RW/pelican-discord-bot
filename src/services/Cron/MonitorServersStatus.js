@@ -63,7 +63,7 @@ module.exports = class MonitorServersStatus {
         const shouldNotify = state === 'offline';
 
         /* If the server is already notified, continue */
-        if (server.isNotified === shouldNotify) return;
+        if (Boolean(server.isNotified) === shouldNotify) return;
 
         const embed = new EmbedBuilder()
             .setColor(shouldNotify ? 0xFF0000 : 0x00FF00)
@@ -88,7 +88,7 @@ module.exports = class MonitorServersStatus {
             if (!user) continue;
 
             /* Send a private message to the user */
-            user.send({ embeds: [embed], components: [actionRow] })//.catch(() => null);
+            await user.send({ embeds: [embed], components: [actionRow] }).catch(() => null);
         }
 
         /* Update the server in database */

@@ -47,6 +47,18 @@ module.exports = class Knex {
             t.boolean('isNotified').defaultTo(false);
         });
 
+        /* Pelican Admin Servers to monitor */
+        const hasTableAdminServersMonitoring = await this.knex.schema.hasTable("monitoring_admin_servers");
+        if (!hasTableAdminServersMonitoring) await this.knex.schema.createTable('monitoring_admin_servers', function(t) {
+            t.increments('id').notNullable().primary();
+            t.string('serverId', 20);
+            t.string('userId', 20); // who added the bot to the monitoring
+            t.string('discordId', 20); // the owner of the server for next feature to monitor resources
+            t.string('channelId', 20);
+            t.string('type', 20);
+            t.boolean('isNotified').defaultTo(false);
+        });
+
         /* Schedule to suspend server */
         const hasTableSuspend = await this.knex.schema.hasTable("schedule_servers");
         if (!hasTableSuspend) await this.knex.schema.createTable('schedule_servers', function(t) {

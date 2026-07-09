@@ -2,12 +2,14 @@ const Events = require('../../managers/structures/Events');
 
 const CronSuspendServer = require('../../services/Cron/SuspendServers');
 const MonitorServersStatus = require('../../services/Cron/MonitorServersStatus');
+const MonitorAdminServersStatus = require('../../services/Cron/MonitorAdminServersStatus');
 
 module.exports = class Ready extends Events {
     constructor (client) {
         super(client, 'clientReady')
         this.cronSuspendServer = new CronSuspendServer(this);
         this.monitorServersStatus = new MonitorServersStatus(this);
+        this.monitorAdminServersStatus = new MonitorAdminServersStatus(this);
     }
 
     async handle () {
@@ -19,6 +21,9 @@ module.exports = class Ready extends Events {
         await this.cronSuspendServer.handle();
 
         /* Cron monitor server status */
-        await this.monitorServersStatus.servers();
+        await this.monitorServersStatus.handle();
+
+        /* Cron monitor admin server status */
+        await this.monitorAdminServersStatus.handle();
     }
 }
