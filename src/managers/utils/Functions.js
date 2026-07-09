@@ -156,6 +156,21 @@ module.exports = class Functions {
     }
 
     /**
+     * Get the emoji based on the server status
+     * @param status
+     * @return {string}
+     */
+    serverPowerEmojiOnly(status) {
+        switch (status) {
+            case "running": return "🟢"
+            case "offline": return "🔴"
+            case "starting": return "🟡"
+            case "stopping": return "🟠"
+            default: return "⚪"
+        }
+    }
+
+    /**
      * Check if the email is valid
      * @param email - The email to check
      * @return {boolean}
