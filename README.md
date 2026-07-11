@@ -43,6 +43,8 @@ Pelican Discord Bot allows you to manage your **Pelican panel directly from Disc
 - 📋 View users or a specific one
 - 🔗 Link / Unlink Discord accounts
 
+![serversList.png](assets/serversList.png)
+![serverAdminDetails.png](assets/serverAdminDetails.png)
 
 ### 👤 User Management
 - 🔑 Add / Remove api key to be able to manage your servers from Discord
@@ -55,6 +57,9 @@ Pelican Discord Bot allows you to manage your **Pelican panel directly from Disc
   - Reinstall
   - Manage monitoring of the server by sending a private message to the users selected when the server is down or up (Add / Remove)
 
+![usersList.png](assets/usersList.png)
+![serverDetails.png](assets/serverDetails.png)
+
 ### 📊 Monitoring
 - 📡 Monitor Discord bot status:
   - ➕ Add monitored Discord bots
@@ -64,6 +69,9 @@ Pelican Discord Bot allows you to manage your **Pelican panel directly from Disc
   - ➕ Add monitored servers
   - ❌ Remove monitored servers
   - 📋 View a list of monitored servers
+
+![monitoringServers.png](assets/monitoringServers.png)
+
 ---
 
 ## ⚡ Features
