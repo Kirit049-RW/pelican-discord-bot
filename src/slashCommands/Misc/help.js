@@ -150,7 +150,7 @@ module.exports = class Help extends SlashCommand {
 
         const buttons = this.createComponents(ctx, categories, languageUsed, container);
 
-        const msg = await ctx.send({
+        let msg = await ctx.send({
             components: [container, buttons],
             flags: MessageFlags.IsComponentsV2
         });
@@ -163,7 +163,7 @@ module.exports = class Help extends SlashCommand {
             await button.deferUpdate();
 
             if (button.customId === "help_home") {
-                return button.message.edit({
+                msg = await button.message.edit({
                     components: [container, buttons],
                 }).catch(() => null);
             }
@@ -171,7 +171,7 @@ module.exports = class Help extends SlashCommand {
                 collectorButton.stop();
                 collectorMenu.stop();
 
-                return button.message.edit({
+                msg = await button.message.edit({
                     components: ctx.messageFormatter.disableButtons(button.message.components, true)
                 }).catch(() => null);
             }
@@ -204,7 +204,7 @@ module.exports = class Help extends SlashCommand {
 
             const buttonsCommands = this.createComponents(ctx, categories, languageUsed, containerCommands);
 
-            return menu.message.edit({
+            msg = await menu.message.edit({
                 components: [containerCommands, buttonsCommands]
             }).catch(() => null);
         });
