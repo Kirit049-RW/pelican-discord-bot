@@ -13,6 +13,7 @@ A powerful Discord bot to manage your Pelican panel.
 - 🚀 Getting Started
 - 🔗 Links
 - ⛔ Reporting Issues
+- 💡 Suggestions
 - 📝 License
 
 ---
@@ -175,6 +176,11 @@ node main.js
 If you find any bugs or encounter unexpected behavior, please don't hesitate to open an issue. Your feedback is valuable and helps improve the project.
 
 You can report issues here: https://github.com/Kirit049-RW/pelican-discord-bot/issues
+
+---
+
+## 💡 Suggestions
+If you have any suggestions for improvements or new features, please feel free to share them. We welcome your ideas and would love to hear from you.
 
 ---
 
