@@ -122,7 +122,7 @@ Rename config.example.json to config.json
   },
   "pelican": {
     "url": "URL of the panel : https://panel.xxx.com",
-    "apiKeyApp": "App API key on pelican : ptla_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "apiKeyApp": "App API key on pelican : papp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     "mailSetup": "If the mail system is enabled on the panel : true or false",
     "host": "SFTP of the pelican : xxx.com",
     "port": "Port of the pelican : 2022"

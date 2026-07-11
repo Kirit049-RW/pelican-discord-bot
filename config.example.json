@@ -21,7 +21,7 @@
     },
     "pelican": {
         "url": "https://panel.xxx.com",
-        "apiKeyApp": "ptla_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        "apiKeyApp": "papp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
         "mailSetup": false,
         "host": "xxx.com",
         "port": "2022"
