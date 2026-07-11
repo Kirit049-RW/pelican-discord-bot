@@ -209,7 +209,7 @@ module.exports = class Help extends SlashCommand {
             }).catch(() => null);
         });
 
-        collectorButton.on('end', (_, reason) => {
+        collectorMenu.on('end', (_, reason) => {
             if (reason === "idle") return msg.edit({ components: ctx.messageFormatter.disableButtons(msg.components, true) }).catch(() => null);
         });
     }

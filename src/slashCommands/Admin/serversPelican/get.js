@@ -67,7 +67,7 @@ module.exports = class ServerGet extends SlashCommand {
                     [
                         "## ✳️ Server features",
                         `> 📟 **Node:** ${nodePelican ? nodePelican.attributes.name : `\`${serverPelican.attributes.node}\` (Not found)`}`,
-                        `> 🥚 **Egg** ${eggPelican ? eggPelican.attributes.name : `\`${serverPelican.attributes.egg}\` (Not found)`}`,
+                        `> 🥚 **Egg:** ${eggPelican ? eggPelican.attributes.name : `\`${serverPelican.attributes.egg}\` (Not found)`}`,
                         `> 🗄️ **Database:** \`${serverPelican.attributes.feature_limits.databases === 0 ? '-' : `${serverPelican.attributes.relationships.databases.data.length}/${serverPelican.attributes.feature_limits.databases}`}\``,
                         `> 💾 **Backup:** \`${serverPelican.attributes.feature_limits.backups === 0 ? '-' : serverPelican.attributes.feature_limits.backups}\``,
                         `> 🌐 **Allocation:** \`${serverPelican.attributes.feature_limits.allocations === 0 ? '-' : serverPelican.attributes.feature_limits.allocations}\``
@@ -85,7 +85,7 @@ module.exports = class ServerGet extends SlashCommand {
                         "## ⚙️ Server limits",
                         `> ♾️ **CPU:** \`${serverPelican.attributes.limits.cpu}%\``,
                         `> 🧠 **Memory:** \`${ctx.utils.formatMegabytes(serverPelican.attributes.limits.memory)}\``,
-                        `> 💽 **Disk** \`${ctx.utils.formatMegabytes(serverPelican.attributes.limits.disk)}\``
+                        `> 💽 **Disk:** \`${ctx.utils.formatMegabytes(serverPelican.attributes.limits.disk)}\``
                     ].join("\n"))
                 )
                 .setButtonAccessory(new ButtonBuilder()

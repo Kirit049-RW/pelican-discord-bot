@@ -114,7 +114,7 @@ module.exports = class ServerCreate extends SlashCommand {
                 .addTextDisplayComponents(t => t.setContent(
                     [
                         `> 📟 **Node:** ${data.nodeData.attributes.name}`,
-                        `> 🥚 **Egg** ${data.eggData.attributes.name}`,
+                        `> 🥚 **Egg:** ${data.eggData.attributes.name}`,
                         `> 🗄️ **Database:** \`${data.database === 0 ? '-' : data.database}\``,
                         `> 💾 **Backup:** \`${data.backup === 0 ? '-' : data.backup}\``,
                         `> 🌐 **Allocation:** \`${data.allocation === 0 ? '-' : data.allocation}\``
@@ -133,7 +133,7 @@ module.exports = class ServerCreate extends SlashCommand {
                     [
                         `> ♾️ **CPU:** \`${data.cpu}%\``,
                         `> 🧠 **Memory:** \`${ctx.utils.formatMegabytes(data.memory)}\``,
-                        `> 💽 **Disk** \`${ctx.utils.formatMegabytes(data.disk)}\``
+                        `> 💽 **Disk:** \`${ctx.utils.formatMegabytes(data.disk)}\``
                     ].join('\n')
                 ))
                 .setButtonAccessory(

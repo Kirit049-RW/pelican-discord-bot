@@ -95,7 +95,15 @@ module.exports = class MonitoringServers extends SlashCommand {
 
         /* Get the user from the database */
         const userDatabase = await ctx.database.table('users').select().where('discordId', ctx.user.id);
-        if (!userDatabase[0]) return ctx.error('You don\'t have an API key! Please register one to be able to use this command!');
+
+        if (!userDatabase[0]) {
+            /* Get the slashCommands in the rest api */
+            const applicationCommands = await ctx.guild.commands.fetch();
+
+            /* Get link or apikey command */
+            const ApiKeyCommand = applicationCommands.find((c) => c.name === 'api-key') ? `</api-key add:${applicationCommands.find((c) => c.name === 'api-key').id}>` : `\`api-key add\``;
+            return ctx.error(`You don't have registered your api key yet! Please use ${ApiKeyCommand} to register it.`);
+        }
 
         if (subCommand === 'add') {
             const serverPelicanId = ctx.options.getString('server');

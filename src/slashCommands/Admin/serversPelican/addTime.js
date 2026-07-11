@@ -6,9 +6,9 @@ module.exports = class ServerAddTime extends SlashCommand {
     constructor(handler) {
         super(handler,{
             name: 'server-add-time',
-            description: 'Add time to a server',
+            description: 'Add time to a server before it is suspended',
             description_localizations: {
-                "fr": "Ajouter du temps à un serveur"
+                "fr": "Ajouter du temps à un serveur avant qu'il soit suspendu"
             },
             options: [{
                 name: "server",
