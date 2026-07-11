@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "bun --quiet node main.js"
+    "dev": "bun --quiet node main.js",
+    "start": "node main.js"
   },
   "repository": {
     "type": "git",
