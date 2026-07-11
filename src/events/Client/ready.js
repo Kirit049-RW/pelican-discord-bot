@@ -15,7 +15,7 @@ module.exports = class Ready extends Events {
     async handle () {
         this.logger.ready(this.client.user.displayName + ' is connected!');
         await this.client.user.setStatus('online');
-        await this.client.user.setActivity(`Pelican`, { type: 3 });
+        await this.client.user.setActivity(`🚀 Powering your Pelican panel`, { type: 3 });
 
         /* Cron suspend server */
         await this.cronSuspendServer.handle();
