@@ -81,7 +81,7 @@ module.exports = class MonitoringServers extends SlashCommand {
                     description_localizations: {
                         "fr": "L'ID du serveur à retirer"
                     },
-                    type: 4,
+                    type: 3,
                     required: true
                 }]
             }],
@@ -175,7 +175,7 @@ module.exports = class MonitoringServers extends SlashCommand {
             ctx.send({ embeds: [embed] });
         }
         else if (subCommand === 'remove') {
-            const serverPelicanId = ctx.options.getInteger('server-id');
+            const serverPelicanId = ctx.options.getString('server-id');
 
             /* Get the server monitoring in database */
             const serverMonitor = await ctx.database.table('monitoring_admin_servers').first().where({ serverId: serverPelicanId });
