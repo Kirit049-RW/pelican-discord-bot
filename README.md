@@ -171,7 +171,7 @@ node main.js
 ## 🔗 Links
 - If you have any questions, don't hesitate to join the Discord server:
 
-    💬 Discord Support: https://discord.gg/Dwn5Nc6WgR 
+    💬 Discord Support: https://botmarket.ovh/discord 
 
 
 - Our website where you can find all our bots:
